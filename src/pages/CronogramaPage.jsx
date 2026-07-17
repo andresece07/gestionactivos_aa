@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { Calendar, ChevronLeft, ChevronRight, Download, X } from 'lucide-react'
-import { employeeQueries, scheduleQueries } from '../lib/supabaseClient'
+import { Calendar, ChevronLeft, ChevronRight, Download, X, Plus } from 'lucide-react'
+import { employeeQueries, scheduleQueries, supabase } from '../lib/supabaseClient'
 import { Loading } from '../components/Loading'
 import { ErrorAlert } from '../components/Error'
 
@@ -32,10 +32,15 @@ export default function CronogramaPage() {
   const [selectedDates, setSelectedDates] = useState([])
   const [selectedEmployee, setSelectedEmployee] = useState(null)
   const [showModal, setShowModal] = useState(false)
+  const [showEmployeeModal, setShowEmployeeModal] = useState(false)
   const [scheduleData, setScheduleData] = useState({})
   const [formData, setFormData] = useState({
     estado: 'TURNO',
     motivo: '',
+  })
+  const [employeeForm, setEmployeeForm] = useState({
+    nombre: '',
+    cargo: '',
   })
 
   const DAYS_IN_RANGE = 35
@@ -169,6 +174,36 @@ export default function CronogramaPage() {
     }
   }
 
+  const handleCreateEmployee = async () => {
+    if (!employeeForm.nombre || !employeeForm.cargo) {
+      setError('Por favor completa nombre y cargo')
+      return
+    }
+
+    try {
+      const colors = ['#e3f2fd', '#f3e5f5', '#e8f5e9', '#fff3e0', '#fce4ec']
+      const randomColor = colors[Math.floor(Math.random() * colors.length)]
+
+      const { data, error: createError } = await supabase
+        .from('empleados')
+        .insert([{
+          nombre: employeeForm.nombre,
+          cargo: employeeForm.cargo,
+          color: randomColor,
+          activo: true,
+        }])
+        .select()
+
+      if (createError) throw createError
+
+      setShowEmployeeModal(false)
+      setEmployeeForm({ nombre: '', cargo: '' })
+      await loadEmployees()
+    } catch (err) {
+      setError(err.message || 'Error al crear empleado')
+    }
+  }
+
   const handleExportExcel = () => {
     const dates = getDatesInRange()
     const rows = []
@@ -232,7 +267,7 @@ export default function CronogramaPage() {
         <div className="card mb-6">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-slate-900 capitalize">{monthName}</h2>
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
               <button
                 onClick={handlePrevMonth}
                 className="btn-secondary flex items-center gap-2"
@@ -246,6 +281,13 @@ export default function CronogramaPage() {
               >
                 Siguiente
                 <ChevronRight className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => setShowEmployeeModal(true)}
+                className="btn-secondary flex items-center gap-2"
+              >
+                <Plus className="h-4 w-4" />
+                Nuevo Personal
               </button>
               <button onClick={handleExportExcel} className="btn-primary flex items-center gap-2">
                 <Download className="h-4 w-4" />
@@ -365,7 +407,7 @@ export default function CronogramaPage() {
         </div>
       </div>
 
-      {/* Modal */}
+      {/* Modal Cambio de Estado */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-lg max-w-md w-full mx-4">
@@ -391,7 +433,7 @@ export default function CronogramaPage() {
                 >
                   {Object.entries(ESTADO_LABELS).map(([key, label]) => (
                     <option key={key} value={key}>
-                      {key === 'TURNO' ? 'En Turno' : key}
+                      {key === 'TURNO' ? 'En Turno' : key === 'LIBRE' ? 'Día Libre' : key}
                     </option>
                   ))}
                 </select>
@@ -421,6 +463,60 @@ export default function CronogramaPage() {
               </button>
               <button onClick={handleApply} className="btn-primary">
                 Guardar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Crear Personal */}
+      {showEmployeeModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg max-w-md w-full mx-4">
+            <div className="bg-primary-600 text-white p-4 flex items-center justify-between">
+              <h3 className="text-lg font-bold">Nuevo Personal</h3>
+              <button
+                onClick={() => setShowEmployeeModal(false)}
+                className="text-white hover:bg-primary-700 p-1 rounded"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Nombre *
+                </label>
+                <input
+                  type="text"
+                  value={employeeForm.nombre}
+                  onChange={e => setEmployeeForm({ ...employeeForm, nombre: e.target.value })}
+                  className="input w-full"
+                  placeholder="Ej: Juan Pérez"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Cargo *
+                </label>
+                <input
+                  type="text"
+                  value={employeeForm.cargo}
+                  onChange={e => setEmployeeForm({ ...employeeForm, cargo: e.target.value })}
+                  className="input w-full"
+                  placeholder="Ej: Técnico, Operario"
+                />
+              </div>
+            </div>
+
+            <div className="bg-slate-100 px-6 py-4 flex gap-2 justify-end">
+              <button onClick={() => setShowEmployeeModal(false)} className="btn-secondary">
+                Cancelar
+              </button>
+              <button onClick={handleCreateEmployee} className="btn-primary">
+                Crear
               </button>
             </div>
           </div>
