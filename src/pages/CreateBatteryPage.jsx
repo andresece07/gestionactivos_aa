@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Plus } from 'lucide-react'
-import { batteryQueries, poolQueries } from '../lib/supabaseClient'
+import { batteryQueries, poolQueries, supplierQueries } from '../lib/supabaseClient'
 import { Loading } from '../components/Loading'
 import { ErrorAlert } from '../components/Error'
 
 export default function CreateBatteryPage() {
   const navigate = useNavigate()
   const [pools, setPools] = useState([])
+  const [suppliers, setSuppliers] = useState([])
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState(null)
@@ -15,6 +16,7 @@ export default function CreateBatteryPage() {
     sku_dynamics: '',
     codigo_unico: '',
     lote: '',
+    proveedor_id: '',
     piscina_id: '',
     fecha_compra: '',
     fecha_instalacion: '',
@@ -30,11 +32,16 @@ export default function CreateBatteryPage() {
   const loadPools = async () => {
     try {
       setLoading(true)
-      const { data, error: fetchError } = await poolQueries.getAll()
-      if (fetchError) throw fetchError
-      setPools(data || [])
+      const [poolsRes, suppliersRes] = await Promise.all([
+        poolQueries.getAll(),
+        supplierQueries.getAll(),
+      ])
+      if (poolsRes.error) throw poolsRes.error
+      if (suppliersRes.error) throw suppliersRes.error
+      setPools(poolsRes.data || [])
+      setSuppliers(suppliersRes.data || [])
     } catch (err) {
-      setError(err.message || 'Error cargando piscinas')
+      setError(err.message || 'Error cargando datos')
     } finally {
       setLoading(false)
     }
@@ -68,6 +75,7 @@ export default function CreateBatteryPage() {
         sku_dynamics: formData.sku_dynamics,
         codigo_unico: formData.codigo_unico,
         lote: formData.lote || null,
+        proveedor_id: formData.proveedor_id || null,
         piscina_id: formData.piscina_id,
         fecha_compra: formData.fecha_compra,
         fecha_instalacion: formData.fecha_instalacion,
@@ -167,24 +175,45 @@ export default function CreateBatteryPage() {
             </div>
 
             {/* Row 2 */}
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
-                Piscina *
-              </label>
-              <select
-                name="piscina_id"
-                value={formData.piscina_id}
-                onChange={handleInputChange}
-                className="input w-full"
-                disabled={submitting}
-              >
-                <option value="">Selecciona una piscina</option>
-                {pools.map(pool => (
-                  <option key={pool.id} value={pool.id}>
-                    {pool.nombre} ({pool.zona})
-                  </option>
-                ))}
-              </select>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Proveedor
+                </label>
+                <select
+                  name="proveedor_id"
+                  value={formData.proveedor_id}
+                  onChange={handleInputChange}
+                  className="input w-full"
+                  disabled={submitting}
+                >
+                  <option value="">Selecciona un proveedor</option>
+                  {suppliers.map(supplier => (
+                    <option key={supplier.id} value={supplier.id}>
+                      {supplier.nombre}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Piscina *
+                </label>
+                <select
+                  name="piscina_id"
+                  value={formData.piscina_id}
+                  onChange={handleInputChange}
+                  className="input w-full"
+                  disabled={submitting}
+                >
+                  <option value="">Selecciona una piscina</option>
+                  {pools.map(pool => (
+                    <option key={pool.id} value={pool.id}>
+                      {pool.nombre} ({pool.zona})
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             {/* Row 3 */}

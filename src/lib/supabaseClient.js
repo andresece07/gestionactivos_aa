@@ -66,11 +66,16 @@ export const batteryQueries = {
         sku_dynamics,
         codigo_unico,
         lote,
+        proveedor_id,
         piscina_id,
         piscinas!inner (
           id,
           nombre,
           zona
+        ),
+        proveedores (
+          id,
+          nombre
         ),
         fecha_compra,
         fecha_instalacion,
@@ -94,11 +99,16 @@ export const batteryQueries = {
         sku_dynamics,
         codigo_unico,
         lote,
+        proveedor_id,
         piscina_id,
         piscinas!inner (
           id,
           nombre,
           zona
+        ),
+        proveedores (
+          id,
+          nombre
         ),
         fecha_compra,
         fecha_instalacion,
@@ -259,6 +269,31 @@ export const poolQueries = {
   getById: async (id) => {
     const { data, error } = await supabase
       .from('piscinas')
+      .select('*')
+      .eq('id', id)
+      .single()
+
+    return { data, error }
+  },
+}
+
+// Funciones para proveedores
+export const supplierQueries = {
+  // Obtener todos los proveedores
+  getAll: async () => {
+    const { data, error } = await supabase
+      .from('proveedores')
+      .select('*')
+      .eq('activo', true)
+      .order('nombre', { ascending: true })
+
+    return { data, error }
+  },
+
+  // Obtener proveedor por ID
+  getById: async (id) => {
+    const { data, error } = await supabase
+      .from('proveedores')
       .select('*')
       .eq('id', id)
       .single()
