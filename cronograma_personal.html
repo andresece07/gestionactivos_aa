@@ -1,0 +1,386 @@
+{% extends "base.html" %}
+{% block title %}Cronograma Interactivo{% endblock %}
+
+{% block content %}
+<style>
+    .calendar-container {
+        overflow-x: auto;
+        white-space: nowrap;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        user-select: none; /* Evitar selección de texto al arrastrar */
+    }
+    .calendar-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.75rem;
+    }
+    .calendar-table th, .calendar-table td {
+        border: 1px solid #dee2e6;
+        padding: 4px;
+        text-align: center;
+        min-width: 35px;
+        height: 45px;
+        transition: all 0.1s;
+    }
+    .day-header { background-color: #f8f9fa; font-weight: bold; }
+    .month-divider {
+        background-color: #343a40;
+        color: white;
+        font-weight: bold;
+        text-align: center;
+    }
+    .calendar-table thead tr:nth-child(1) th {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+    }
+    .calendar-table thead tr:nth-child(2) th {
+        position: sticky;
+        top: 45px; /* Altura aproximada de la primera fila de cabecera */
+        z-index: 20;
+    }
+    .col-name {
+        min-width: 220px;
+        text-align: left !important;
+        padding-left: 12px !important;
+        position: sticky;
+        left: 0;
+        background: white;
+        z-index: 10;
+        border-right: 3px solid #343a40 !important;
+    }
+    thead th.col-name {
+        z-index: 30 !important;
+    }
+    
+    /* Estados */
+    .status-Turno { background-color: #0d6efd !important; color: white !important; font-weight: bold; }
+    .status-Libre { background-color: #6c757d !important; color: white !important; font-weight: bold; }
+    .status-Enfermo { background-color: #dc3545 !important; color: white !important; font-weight: bold; }
+    .status-Vacaciones { background-color: #198754 !important; color: white !important; font-weight: bold; }
+    .status-Falta { background-color: #ffc107 !important; color: black !important; font-weight: bold; }
+    .status-Programado { background-color: #ffffff !important; color: #dee2e6 !important; border: 1px solid #dee2e6 !important; }
+    
+    .cell-calendar { 
+        cursor: pointer; 
+        user-select: none; 
+        transition: all 0.1s; 
+        border: 1px solid #dee2e6 !important; 
+        text-align: center; 
+        vertical-align: middle;
+        font-size: 14px;
+        min-width: 30px;
+        height: 35px;
+    }
+    .cell-calendar:hover { background-color: rgba(0,0,0,0.1) !important; transform: scale(1.05); z-index: 10; position: relative; }
+    .cell-selecting { background-color: #fff176 !important; border: 2px solid #fbc02d !important; z-index: 20 !important; position: relative; }
+    
+    /* Selección estilo Excel */
+    .cell-selected {
+        outline: 2px solid #0d6efd !important;
+        outline-offset: -2px;
+        background-color: rgba(13, 110, 253, 0.2) !important;
+    }
+    .quick-actions {
+        animation: slideUp 0.2s ease-out;
+        border: 1px solid #dee2e6;
+        min-width: 120px;
+    }
+    @keyframes slideUp {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .day-today { border: 2px solid #ffc107 !important; }
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="h4 mb-0"><i class="fas fa-th me-2 text-primary"></i>Cronograma Interactivo</h2>
+        <p class="text-muted small mb-0">Arrastre el mouse para seleccionar varios d&iacute;as y aplicar novedades.</p>
+    </div>
+    <form class="d-flex align-items-center gap-2 bg-light p-2 rounded shadow-sm" method="GET" action="{{ url_for('routes.cronograma_personal') }}">
+        <div class="d-flex align-items-center gap-1">
+            <label class="small fw-bold">Desde:</label>
+            <input type="date" id="start_date" name="start" class="form-control form-control-sm" value="{{ dias_rango[0].strftime('%Y-%m-%d') }}">
+        </div>
+        <div class="d-flex align-items-center gap-1">
+            <label class="small fw-bold">Hasta:</label>
+            <input type="date" id="end_date" name="end" class="form-control form-control-sm" value="{{ dias_rango[-1].strftime('%Y-%m-%d') }}">
+        </div>
+        <button type="submit" class="btn btn-sm btn-primary px-3">Filtrar</button>
+    </form>
+        <div class="d-flex gap-2">
+            <select class="form-select" style="width: 250px;" onchange="location.href='{{ url_for('routes.cronograma_personal') }}?finca_id=' + this.value + '&start={{ dias_rango[0].strftime('%Y-%m-%d') if dias_rango else '' }}'">
+                <option value="">-- Todas las Fincas --</option>
+                {% for f in fincas %}
+                <option value="{{ f.id }}" {% if finca_id_filter == f.id %}selected{% endif %}>{{ f.nombre }}</option>
+                {% endfor %}
+            </select>
+            <a href="{{ url_for('routes.cronograma_personal', start=prev_start, finca_id=finca_id_filter) }}" class="btn btn-outline-secondary">
+                <i class="fas fa-chevron-left"></i> Anterior
+            </a>
+            <a href="{{ url_for('routes.cronograma_personal', start=next_start, finca_id=finca_id_filter) }}" class="btn btn-outline-secondary">
+                Siguiente <i class="fas fa-chevron-right"></i>
+            </a>
+            <a href="{{ url_for('routes.exportar_cronograma_excel', start=dias_rango[0].strftime('%Y-%m-%d'), end=dias_rango[-1].strftime('%Y-%m-%d'), finca_id=finca_id_filter) }}" class="btn btn-success">
+                <i class="fas fa-file-excel me-1"></i> Excel
+            </a>
+            <a href="{{ url_for('routes.exportar_cronograma_pdf', start=dias_rango[0].strftime('%Y-%m-%d'), end=dias_rango[-1].strftime('%Y-%m-%d'), finca_id=finca_id_filter) }}" class="btn btn-danger">
+                <i class="fas fa-file-pdf me-1"></i> PDF
+            </a>
+        </div>
+</div>
+
+<div class="calendar-container" id="calendarContainer">
+    <table class="calendar-table">
+        <thead>
+            <tr class="day-header">
+                <th class="col-name" rowspan="2">Personal / Cargo</th>
+                {% set last_month = -1 %}
+                {% for dia in dias_rango %}
+                    {% if dia.month != last_month %}
+                        {% set ns = namespace(count=0) %}
+                        {% for d in dias_rango %}{% if d.month == dia.month %}{% set ns.count = ns.count + 1 %}{% endif %}{% endfor %}
+                        <th colspan="{{ ns.count }}" class="month-divider">{{ dia.strftime('%B %Y') }}</th>
+                        {% set last_month = dia.month %}
+                    {% endif %}
+                {% endfor %}
+            </tr>
+            <tr class="day-header">
+                {% set dias_letra = ['D', 'L', 'M', 'M', 'J', 'V', 'S', 'D'] %}
+                {% for dia in dias_rango %}
+                <th class="{% if dia == hoy %}day-today{% endif %}">
+                    <div>{{ dia.strftime('%d') }}</div>
+                    <div style="font-size: 0.6rem; color: #6c757d;">{{ dias_letra[dia.strftime('%w')|int] }}</div>
+                </th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in data %}
+            {% set emp_color = item.empleado.color if item.empleado.color else "#e3f2fd" %}
+            <tr data-emp-id="{{ item.empleado.id }}" data-emp-name="{{ item.empleado.nombre }}">
+                <td class="col-name" style="background-color: {{ emp_color }};">
+                    <div class="fw-bold">{{ item.empleado.nombre }}</div>
+                    <div class="text-dark opacity-75" style="font-size: 0.7rem; font-weight: 500;">{{ item.empleado.cargo }}</div>
+                </td>
+                {% for status in item.dias %}
+                {% set dia_str = dias_rango[loop.index0].strftime('%Y-%m-%d') %}
+                <td class="status-{{ status }} cell-calendar" 
+                    data-date="{{ dia_str }}"
+                    title="{{ dia_str }}">
+                    {% if status == "Enfermo" %}E{% elif status == "Vacaciones" %}V{% elif status == "Turno" %}T{% elif status == "Falta" %}F{% elif status == "Libre" %}L{% endif %}
+                </td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Modal de Aplicación en Rango -->
+<div class="modal fade" id="modalRango" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content shadow-lg border-0">
+            <form id="formRango" method="POST" action="" enctype="multipart/form-data">
+                <input type="hidden" name="redirect_start" value="{{ dias_rango[0].strftime('%Y-%m-%d') }}">
+                <input type="hidden" name="redirect_end" value="{{ dias_rango[-1].strftime('%Y-%m-%d') }}">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title"><i class="fas fa-calendar-check me-2"></i>Aplicar a Selecci&oacute;n</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="small text-muted mb-3" id="selectionInfo"></p>
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Tipo de Registro</label>
+                        <select name="tipo" class="form-select" required>
+                            <option value="En Turno">En Turno</option>
+                            <option value="Dia Libre">D&iacute;a Libre</option>
+                            <option value="Vacaciones">Vacaciones</option>
+                            <option value="Enfermedad">Enfermedad / Baja M&eacute;dica</option>
+                            <option value="Falta">Falta Injustificada</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Certificado / Evidencia (Opcional)</label>
+                        <input type="file" name="certificado" class="form-control" accept="image/*,application/pdf">
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-6 mb-3">
+                            <label class="form-label fw-bold">Desde</label>
+                            <input type="date" name="fecha_inicio" id="range_start" class="form-control" readonly>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <label class="form-label fw-bold">Hasta</label>
+                            <input type="date" name="fecha_fin" id="range_end" class="form-control" readonly>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Motivo / Observaci&oacute;n</label>
+                        <textarea name="motivo" class="form-control" rows="2" placeholder="Opcional..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% block scripts %}
+<script>
+    let isSelecting = false;
+    let startCell = null;
+    let currentEmpId = null;
+
+    const cells = document.querySelectorAll('.cell-calendar');
+    
+    cells.forEach(cell => {
+        cell.addEventListener('mousedown', function(e) {
+            if (e.button !== 0) return; // Solo click izquierdo
+            isSelecting = true;
+            startCell = this;
+            currentEmpId = this.closest('tr').dataset.empId;
+            clearSelection();
+            this.classList.add('cell-selecting');
+        });
+
+        cell.addEventListener('mouseenter', function() {
+            if (isSelecting && this.closest('tr').dataset.empId === currentEmpId) {
+                highlightRange(startCell, this);
+            }
+        });
+    });
+
+    window.addEventListener('mouseup', function() {
+        if (isSelecting) {
+            isSelecting = false;
+            const selecting = document.querySelectorAll('.cell-selecting');
+            if (selecting.length > 0) {
+                const dates = Array.from(selecting).map(c => c.dataset.date).sort();
+                showQuickActions(selecting[selecting.length - 1], dates[0], dates[dates.length - 1]);
+            }
+        }
+    });
+
+    function highlightRange(start, end) {
+        clearSelecting();
+        const row = start.closest('tr');
+        const allCells = Array.from(row.querySelectorAll('.cell-calendar'));
+        const startIndex = allCells.indexOf(start);
+        const endIndex = allCells.indexOf(end);
+        const min = Math.min(startIndex, endIndex);
+        const max = Math.max(startIndex, endIndex);
+        
+        for (let i = min; i <= max; i++) {
+            allCells[i].classList.add('cell-selecting');
+        }
+    }
+
+    function clearSelecting() {
+        document.querySelectorAll('.cell-selecting').forEach(c => c.classList.remove('cell-selecting'));
+    }
+
+    function clearSelection() {
+        document.querySelectorAll('.cell-selected').forEach(c => c.classList.remove('cell-selected'));
+        hideQuickActions();
+    }
+
+    function showQuickActions(targetCell, start, end) {
+        hideQuickActions();
+        const rect = targetCell.getBoundingClientRect();
+        const menu = document.createElement('div');
+        menu.id = 'quick-actions-menu';
+        menu.style.position = 'absolute';
+        menu.style.zIndex = '1050';
+        menu.style.backgroundColor = 'white';
+        menu.style.padding = '8px';
+        menu.style.borderRadius = '8px';
+        menu.style.boxShadow = '0 4px 15px rgba(0,0,0,0.2)';
+        menu.style.display = 'flex';
+        menu.style.gap = '8px';
+        
+        // Ajuste de posición para evitar que se salga o bloquee
+        const top = rect.bottom + window.scrollY + 5;
+        const left = Math.max(10, rect.left + window.scrollX - 50);
+        menu.style.top = top + 'px';
+        menu.style.left = left + 'px';
+        menu.style.zIndex = '1050';
+        
+        menu.innerHTML = `
+            <div class="d-flex gap-1">
+                <button class="btn btn-sm btn-primary" onclick="quickApply('En Turno', '${start}', '${end}')">T</button>
+                <button class="btn btn-sm shadow-sm" style="background-color: #e0f7fa;" onclick="quickApply('Dia Libre', '${start}', '${end}')">L</button>
+                <button class="btn btn-sm btn-danger" onclick="openFullModal('${start}', '${end}')"><i class="fas fa-plus"></i></button>
+            </div>
+        `;
+        document.body.appendChild(menu);
+    }
+
+    function hideQuickActions() {
+        const existing = document.getElementById('quick-actions-menu');
+        if (existing) existing.remove();
+    }
+
+    function quickApply(tipo, start, end) {
+        const formData = new FormData();
+        formData.append('tipo', tipo);
+        formData.append('fecha_inicio', start);
+        formData.append('fecha_fin', end);
+        formData.append('motivo', 'Aplicado vía selección rápida');
+        formData.append('csrf_token', '{{ csrf_token() }}');
+        
+        // Mantener el filtro actual PRIORIZANDO los inputs de la pantalla
+        const sInput = document.getElementById('start_date');
+        const eInput = document.getElementById('end_date');
+        const s = sInput ? sInput.value : start;
+        const e = eInput ? eInput.value : end;
+        formData.append('redirect_start', s);
+        formData.append('redirect_end', e);
+
+        fetch(`/empleados/novedad/${currentEmpId}`, {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'success') {
+                window.location.href = `{{ url_for('routes.cronograma_personal') }}?start=${s}&end=${e}`;
+            } else {
+                alert('Error al guardar: ' + (data.message || 'Error desconocido'));
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert('Error de conexión al guardar.');
+        });
+    }
+
+    function openFullModal(start, end) {
+        const empName = document.querySelector(`tr[data-emp-id="${currentEmpId}"]`).dataset.empName;
+        document.getElementById('selectionInfo').innerHTML = `Personal: <b>${empName}</b><br>Rango: <b>${start}</b> al <b>${end}</b>`;
+        document.getElementById('range_start').value = start;
+        document.getElementById('range_end').value = end;
+        document.getElementById('formRango').action = `/empleados/novedad/${currentEmpId}`;
+        
+        // Asegurar que los inputs de redireccion tengan el filtro actual de los inputs de arriba
+        const sInput = document.getElementById('start_date');
+        const eInput = document.getElementById('end_date');
+        const s = sInput ? sInput.value : start;
+        const e = eInput ? eInput.value : end;
+        document.getElementsByName('redirect_start')[0].value = s;
+        document.getElementsByName('redirect_end')[0].value = e;
+        
+        hideQuickActions();
+        const modal = new bootstrap.Modal(document.getElementById('modalRango'));
+        modal.show();
+    }
+</script>
+{% endblock %}
+{% endblock %}

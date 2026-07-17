@@ -1,0 +1,15 @@
+name = "gestion-activos-baterias"
+type = "javascript"
+main = "functions/_middleware.js"
+build.command = "npm run build"
+build.cwd = "./"
+build.watch_paths = ["src/**/*.jsx", "src/**/*.js"]
+
+# Cloudflare Pages configuration
+pages_build_output_dir = "dist"
+
+[env.production]
+name = "gestion-activos-baterias"
+
+[[env.production.env]]
+vars = { ENVIRONMENT = "production" }
