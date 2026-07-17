@@ -345,12 +345,12 @@ WITH user_id_current AS (
   SELECT auth.uid() as uid
 ),
 bateria_ids AS (
-  SELECT id FROM baterias ORDER BY created_at LIMIT 5
+  SELECT id, ROW_NUMBER() OVER (ORDER BY id) as rn FROM baterias ORDER BY created_at LIMIT 8
 )
 INSERT INTO comentarios_bateria (bateria_id, contenido, usuario_id)
 SELECT
   b.id,
-  CASE ROW_NUMBER() OVER (ORDER BY b.id)
+  CASE b.rn
     WHEN 1 THEN 'Batería instalada correctamente. Voltaje inicial: 48V'
     WHEN 2 THEN 'Revisión de conexiones y estado físico OK'
     WHEN 3 THEN 'Lectura de degradación dentro de parámetros normales'
@@ -361,9 +361,9 @@ SELECT
     WHEN 8 THEN 'Degradación acumulada: 2.3% - dentro de especificaciones'
   END AS contenido,
   (SELECT uid FROM user_id_current),
-  CURRENT_TIMESTAMP - (INTERVAL '1 day' * (8 - ROW_NUMBER() OVER (ORDER BY b.id)))
+  CURRENT_TIMESTAMP - (INTERVAL '1 day' * (8 - b.rn))
 FROM bateria_ids b
-WHERE ROW_NUMBER() OVER (ORDER BY b.id) <= 8
+WHERE b.rn <= 8
 ON CONFLICT DO NOTHING;
 
 -- ============================================================================
