@@ -292,7 +292,7 @@ SELECT
     WHEN 4 THEN 5.0
     ELSE 20.0
   END::numeric(8, 2),
-  'ACTIVA'
+  'ACTIVA'::estado_bateria
 FROM piscinas_map p, generate_series(1, 5)
 LIMIT 5
 ON CONFLICT (sku_dynamics) DO NOTHING;
@@ -307,7 +307,7 @@ SELECT
   (SELECT id FROM piscinas WHERE nombre = 'Langua'),
   '2023-11-15'::date,
   '2023-11-22'::date,
-  'MANTENIMIENTO',
+  'MANTENIMIENTO'::motivo_paro,
   3,
   (SELECT uid FROM user_id_current)
 WHERE EXISTS (SELECT 1 FROM user_id_current WHERE uid IS NOT NULL)
@@ -316,7 +316,7 @@ SELECT
   (SELECT id FROM piscinas WHERE nombre = 'La Esperanza'),
   '2024-02-10'::date,
   '2024-02-14'::date,
-  'PESCA',
+  'PESCA'::motivo_paro,
   0,
   (SELECT uid FROM user_id_current)
 WHERE EXISTS (SELECT 1 FROM user_id_current WHERE uid IS NOT NULL)
@@ -325,7 +325,7 @@ SELECT
   (SELECT id FROM piscinas WHERE nombre = 'Vigsa'),
   '2024-04-05'::date,
   '2024-04-12'::date,
-  'MANTENIMIENTO',
+  'MANTENIMIENTO'::motivo_paro,
   2,
   (SELECT uid FROM user_id_current)
 WHERE EXISTS (SELECT 1 FROM user_id_current WHERE uid IS NOT NULL)
@@ -334,7 +334,7 @@ SELECT
   (SELECT id FROM piscinas WHERE nombre = 'Langua'),
   '2024-06-20'::date,
   '2024-06-23'::date,
-  'PESCA',
+  'PESCA'::motivo_paro,
   1,
   (SELECT uid FROM user_id_current)
 WHERE EXISTS (SELECT 1 FROM user_id_current WHERE uid IS NOT NULL)
