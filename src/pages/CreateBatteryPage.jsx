@@ -14,6 +14,7 @@ export default function CreateBatteryPage() {
   const [formData, setFormData] = useState({
     sku_dynamics: '',
     codigo_unico: '',
+    lote: '',
     piscina_id: '',
     fecha_compra: '',
     fecha_instalacion: '',
@@ -66,6 +67,7 @@ export default function CreateBatteryPage() {
       const { data: newBattery, error: createError } = await batteryQueries.create({
         sku_dynamics: formData.sku_dynamics,
         codigo_unico: formData.codigo_unico,
+        lote: formData.lote || null,
         piscina_id: formData.piscina_id,
         fecha_compra: formData.fecha_compra,
         fecha_instalacion: formData.fecha_instalacion,
@@ -119,7 +121,7 @@ export default function CreateBatteryPage() {
         <div className="card">
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Row 1 */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
                   SKU Dynamics *
@@ -145,6 +147,20 @@ export default function CreateBatteryPage() {
                   onChange={handleInputChange}
                   className="input w-full"
                   placeholder="ej: BAT-001-2024"
+                  disabled={submitting}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Lote
+                </label>
+                <input
+                  type="text"
+                  name="lote"
+                  value={formData.lote}
+                  onChange={handleInputChange}
+                  className="input w-full"
+                  placeholder="ej: LOTE-2024-001"
                   disabled={submitting}
                 />
               </div>

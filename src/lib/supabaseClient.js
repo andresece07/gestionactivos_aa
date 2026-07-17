@@ -65,6 +65,7 @@ export const batteryQueries = {
         id,
         sku_dynamics,
         codigo_unico,
+        lote,
         piscina_id,
         piscinas!inner (
           id,
@@ -92,6 +93,7 @@ export const batteryQueries = {
         id,
         sku_dynamics,
         codigo_unico,
+        lote,
         piscina_id,
         piscinas!inner (
           id,

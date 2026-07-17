@@ -103,6 +103,7 @@ export default function BatteriesPage() {
                 <tr className="bg-slate-50">
                   <th>Código Único</th>
                   <th>SKU Dynamics</th>
+                  <th>Lote</th>
                   <th>Piscina</th>
                   <th>Estado</th>
                   <th>Capacidad (kWh)</th>
@@ -116,6 +117,7 @@ export default function BatteriesPage() {
                   <tr key={battery.id} className="hover:bg-slate-50">
                     <td className="font-medium text-slate-900">{battery.codigo_unico}</td>
                     <td className="text-slate-600 text-sm">{battery.sku_dynamics}</td>
+                    <td className="text-slate-600 text-sm">{battery.lote || '—'}</td>
                     <td className="text-slate-600">{battery.piscinas.nombre}</td>
                     <td>
                       <span className={`badge ${battery.estado === 'ACTIVA' ? 'badge-success' : 'badge-danger'}`}>

@@ -31,6 +31,7 @@ CREATE TABLE baterias (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   sku_dynamics text NOT NULL UNIQUE,
   codigo_unico text NOT NULL UNIQUE,
+  lote text,
   piscina_id uuid NOT NULL REFERENCES piscinas(id) ON DELETE RESTRICT,
   fecha_compra date NOT NULL,
   fecha_instalacion date NOT NULL,
