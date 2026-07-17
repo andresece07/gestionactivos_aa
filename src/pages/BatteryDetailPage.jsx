@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, MessageSquare, AlertInfo } from 'lucide-react'
+import { ArrowLeft, MessageSquare, Info } from 'lucide-react'
 import { batteryQueries, commentQueries } from '../lib/supabaseClient'
 import { Loading } from '../components/Loading'
 import { ErrorPage } from '../components/Error'
@@ -167,7 +167,7 @@ export default function BatteryDetailPage() {
 
             {/* Degradación Info */}
             <div className="bg-primary-50 border border-primary-200 rounded-lg p-4 flex gap-3">
-              <AlertInfo className="h-5 w-5 text-primary-600 flex-shrink-0 mt-0.5" />
+              <Info className="h-5 w-5 text-primary-600 flex-shrink-0 mt-0.5" />
               <div className="text-sm text-primary-900">
                 <p className="font-medium mb-1">Degradación</p>
                 <p>
