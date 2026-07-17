@@ -7,6 +7,7 @@ import DashboardPage from './pages/DashboardPage'
 import BatteriesPage from './pages/BatteriesPage'
 import BatteryDetailPage from './pages/BatteryDetailPage'
 import StoppagePage from './pages/StoppagePage'
+import CronogramaPage from './pages/CronogramaPage'
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth()
@@ -69,6 +70,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <StoppagePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/cronograma"
+          element={
+            <ProtectedRoute>
+              <CronogramaPage />
             </ProtectedRoute>
           }
         />
