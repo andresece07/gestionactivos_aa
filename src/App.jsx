@@ -6,6 +6,7 @@ import LoginPage from './pages/LoginPage'
 import DashboardPage from './pages/DashboardPage'
 import BatteriesPage from './pages/BatteriesPage'
 import BatteryDetailPage from './pages/BatteryDetailPage'
+import CreateBatteryPage from './pages/CreateBatteryPage'
 import StoppagePage from './pages/StoppagePage'
 import CronogramaPage from './pages/CronogramaPage'
 
@@ -54,6 +55,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <BatteriesPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/baterias/nueva"
+          element={
+            <ProtectedRoute>
+              <CreateBatteryPage />
             </ProtectedRoute>
           }
         />

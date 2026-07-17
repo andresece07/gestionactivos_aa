@@ -69,7 +69,7 @@ export default function BatteriesPage() {
               Gestión centralizada de baterías fotovoltaicas
             </p>
           </div>
-          <Link to="/" className="btn-primary flex items-center gap-2">
+          <Link to="/baterias/nueva" className="btn-primary flex items-center gap-2">
             <Plus className="h-4 w-4" />
             Nueva Batería
           </Link>
@@ -149,7 +149,7 @@ export default function BatteriesPage() {
             <p className="text-slate-600 mb-4">
               {searchTerm ? 'No se encontraron baterías' : 'No hay baterías registradas'}
             </p>
-            <Link to="/" className="btn-primary inline-flex items-center gap-2">
+            <Link to="/baterias/nueva" className="btn-primary inline-flex items-center gap-2">
               <Plus className="h-4 w-4" />
               Crear Primera Batería
             </Link>
