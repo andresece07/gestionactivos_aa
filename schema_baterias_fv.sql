@@ -243,6 +243,38 @@ ON CONFLICT (sku_dynamics) DO NOTHING;
 -- Paros y comentarios requieren usuario autenticado - se crean desde la app
 -- Para seed data de prueba, usar la aplicación después de loguearse
 
+-- Seed data para empleados
+WITH piscinas_map AS (
+  SELECT id FROM piscinas WHERE nombre = 'Langua' LIMIT 1
+)
+INSERT INTO empleados (nombre, cargo, color, piscina_id, activo)
+SELECT
+  CASE ROW_NUMBER() OVER (ORDER BY p.id)
+    WHEN 1 THEN 'Juan Pérez'
+    WHEN 2 THEN 'María García'
+    WHEN 3 THEN 'Carlos López'
+    WHEN 4 THEN 'Ana Martínez'
+    WHEN 5 THEN 'Roberto Silva'
+  END,
+  CASE ROW_NUMBER() OVER (ORDER BY p.id)
+    WHEN 1 THEN 'Gerente'
+    WHEN 2 THEN 'Técnico'
+    WHEN 3 THEN 'Operario'
+    WHEN 4 THEN 'Operario'
+    WHEN 5 THEN 'Mantenimiento'
+  END,
+  CASE ROW_NUMBER() OVER (ORDER BY p.id)
+    WHEN 1 THEN '#e3f2fd'
+    WHEN 2 THEN '#f3e5f5'
+    WHEN 3 THEN '#e8f5e9'
+    WHEN 4 THEN '#fff3e0'
+    WHEN 5 THEN '#fce4ec'
+  END,
+  p.id,
+  true
+FROM piscinas_map p, generate_series(1, 5)
+ON CONFLICT DO NOTHING;
+
 -- ============================================================================
 -- 6. ÍNDICES ADICIONALES
 -- ============================================================================
@@ -251,7 +283,59 @@ CREATE INDEX idx_comentarios_fecha ON comentarios_bateria(fecha_creacion DESC);
 CREATE INDEX idx_paros_motivo ON paros_piscina(motivo);
 
 -- ============================================================================
--- 7. VISTA
+-- 6b. TABLAS PARA CRONOGRAMA
+-- ============================================================================
+
+CREATE TYPE estado_cronograma AS ENUM ('TURNO', 'LIBRE', 'ENFERMO', 'VACACIONES', 'FALTA', 'PROGRAMADO');
+
+CREATE TABLE empleados (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  nombre text NOT NULL,
+  cargo text NOT NULL,
+  color text DEFAULT '#e3f2fd',
+  piscina_id uuid REFERENCES piscinas(id) ON DELETE SET NULL,
+  activo boolean DEFAULT true,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone,
+  CONSTRAINT nombre_no_vacio CHECK (length(trim(nombre)) > 0),
+  CONSTRAINT cargo_no_vacio CHECK (length(trim(cargo)) > 0)
+);
+
+CREATE INDEX idx_empleados_piscina ON empleados(piscina_id);
+CREATE INDEX idx_empleados_activo ON empleados(activo);
+
+CREATE TABLE cronograma_personal (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  empleado_id uuid NOT NULL REFERENCES empleados(id) ON DELETE CASCADE,
+  fecha date NOT NULL,
+  estado estado_cronograma NOT NULL DEFAULT 'PROGRAMADO',
+  motivo text,
+  evidencia_url text,
+  creado_por uuid REFERENCES auth.users(id) ON DELETE SET NULL,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone,
+  CONSTRAINT estado_valido CHECK (estado IN ('TURNO', 'LIBRE', 'ENFERMO', 'VACACIONES', 'FALTA', 'PROGRAMADO'))
+);
+
+CREATE INDEX idx_cronograma_empleado ON cronograma_personal(empleado_id);
+CREATE INDEX idx_cronograma_fecha ON cronograma_personal(fecha);
+CREATE INDEX idx_cronograma_estado ON cronograma_personal(estado);
+CREATE UNIQUE INDEX idx_cronograma_unico ON cronograma_personal(empleado_id, fecha);
+
+-- ============================================================================
+-- 7. RLS PARA CRONOGRAMA
+-- ============================================================================
+
+ALTER TABLE empleados ENABLE ROW LEVEL SECURITY;
+ALTER TABLE cronograma_personal ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "empleados_select_all" ON empleados FOR SELECT USING (true);
+CREATE POLICY "cronograma_select_all" ON cronograma_personal FOR SELECT USING (true);
+CREATE POLICY "cronograma_insert_auth" ON cronograma_personal FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
+CREATE POLICY "cronograma_update_auth" ON cronograma_personal FOR UPDATE USING (auth.uid() IS NOT NULL);
+
+-- ============================================================================
+-- 8. VISTA
 -- ============================================================================
 
 CREATE OR REPLACE VIEW vw_baterias_estado AS

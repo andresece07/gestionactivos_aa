@@ -267,6 +267,113 @@ export const poolQueries = {
   },
 }
 
+// Funciones para empleados
+export const employeeQueries = {
+  // Obtener todos los empleados
+  getAll: async () => {
+    const { data, error } = await supabase
+      .from('empleados')
+      .select('*')
+      .eq('activo', true)
+      .order('nombre', { ascending: true })
+
+    return { data, error }
+  },
+
+  // Obtener empleado por ID
+  getById: async (id) => {
+    const { data, error } = await supabase
+      .from('empleados')
+      .select('*')
+      .eq('id', id)
+      .single()
+
+    return { data, error }
+  },
+}
+
+// Funciones para cronograma
+export const scheduleQueries = {
+  // Obtener cronograma para un rango de fechas
+  getRange: async (startDate, endDate) => {
+    const { data, error } = await supabase
+      .from('cronograma_personal')
+      .select(`
+        id,
+        empleado_id,
+        empleados (
+          id,
+          nombre,
+          cargo,
+          color
+        ),
+        fecha,
+        estado,
+        motivo
+      `)
+      .gte('fecha', startDate)
+      .lte('fecha', endDate)
+      .order('fecha', { ascending: true })
+
+    return { data, error }
+  },
+
+  // Obtener cronograma de un empleado
+  getByEmployee: async (employeeId, startDate, endDate) => {
+    const { data, error } = await supabase
+      .from('cronograma_personal')
+      .select('*')
+      .eq('empleado_id', employeeId)
+      .gte('fecha', startDate)
+      .lte('fecha', endDate)
+      .order('fecha', { ascending: true })
+
+    return { data, error }
+  },
+
+  // Crear o actualizar registro de cronograma
+  upsert: async (scheduleData) => {
+    const user = await supabaseAuth.getUser()
+    const { data, error } = await supabase
+      .from('cronograma_personal')
+      .upsert([{
+        ...scheduleData,
+        creado_por: user?.id,
+      }], { onConflict: 'empleado_id,fecha' })
+      .select()
+
+    return { data, error }
+  },
+
+  // Actualizar rango de fechas
+  updateRange: async (employeeId, startDate, endDate, estado, motivo) => {
+    const user = await supabaseAuth.getUser()
+    const dates = []
+    const current = new Date(startDate)
+    const end = new Date(endDate)
+
+    while (current <= end) {
+      dates.push(new Date(current).toISOString().split('T')[0])
+      current.setDate(current.getDate() + 1)
+    }
+
+    const records = dates.map(date => ({
+      empleado_id: employeeId,
+      fecha: date,
+      estado,
+      motivo,
+      creado_por: user?.id,
+    }))
+
+    const { data, error } = await supabase
+      .from('cronograma_personal')
+      .upsert(records, { onConflict: 'empleado_id,fecha' })
+      .select()
+
+    return { data, error }
+  },
+}
+
 // Función para escuchar cambios en tiempo real
 export const subscribeToChanges = (table, callback) => {
   const subscription = supabase
