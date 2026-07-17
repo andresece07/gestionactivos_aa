@@ -1,0 +1,213 @@
+<svg viewBox="0 0 1400 900" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      .table { fill: #e8f4f8; stroke: #0284c7; stroke-width: 2; }
+      .table-title { fill: #0284c7; font-weight: bold; font-size: 14px; }
+      .table-header { fill: #bfdbfe; stroke: #0284c7; stroke-width: 1; }
+      .table-row { fill: #ffffff; stroke: #e5e7eb; stroke-width: 0.5; }
+      .pk { fill: #fbbf24; font-weight: bold; }
+      .fk { fill: #ec4899; font-weight: bold; }
+      .text { font-size: 11px; font-family: monospace; }
+      .relationship { stroke: #6366f1; stroke-width: 2; fill: none; marker-end: url(#arrowhead); }
+      .label { fill: #1f2937; font-size: 10px; font-weight: bold; }
+    </style>
+    <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#6366f1" />
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="700" y="30" style="font-size: 24px; font-weight: bold; text-anchor: middle; fill: #1f2937;">
+    Diagrama de Base de Datos - Gestión de Baterías Fotovoltaicas
+  </text>
+
+  <!-- PISCINAS Table -->
+  <rect x="50" y="80" width="220" height="160" class="table" rx="4"/>
+  <rect x="50" y="80" width="220" height="25" class="table-header" rx="4"/>
+  <text x="160" y="100" class="table-title" text-anchor="middle">PISCINAS</text>
+
+  <rect x="50" y="105" width="220" height="18" class="table-row"/>
+  <text x="60" y="118" class="text pk">🔑 id (uuid)</text>
+
+  <rect x="50" y="123" width="220" height="18" class="table-row"/>
+  <text x="60" y="136" class="text">nombre (text)</text>
+
+  <rect x="50" y="141" width="220" height="18" class="table-row"/>
+  <text x="60" y="154" class="text">zona (text)</text>
+
+  <rect x="50" y="159" width="220" height="18" class="table-row"/>
+  <text x="60" y="172" class="text">created_at (timestamp)</text>
+
+  <!-- PROVEEDORES Table -->
+  <rect x="1100" y="80" width="250" height="200" class="table" rx="4"/>
+  <rect x="1100" y="80" width="250" height="25" class="table-header" rx="4"/>
+  <text x="1225" y="100" class="table-title" text-anchor="middle">PROVEEDORES</text>
+
+  <rect x="1100" y="105" width="250" height="18" class="table-row"/>
+  <text x="1110" y="118" class="text pk">🔑 id (uuid)</text>
+
+  <rect x="1100" y="123" width="250" height="18" class="table-row"/>
+  <text x="1110" y="136" class="text">nombre (text) UNIQUE</text>
+
+  <rect x="1100" y="141" width="250" height="18" class="table-row"/>
+  <text x="1110" y="154" class="text">persona_contacto (text)</text>
+
+  <rect x="1100" y="159" width="250" height="18" class="table-row"/>
+  <text x="1110" y="172" class="text">email (text)</text>
+
+  <rect x="1100" y="177" width="250" height="18" class="table-row"/>
+  <text x="1110" y="190" class="text">telefono (text)</text>
+
+  <rect x="1100" y="195" width="250" height="18" class="table-row"/>
+  <text x="1110" y="208" class="text">ciudad, pais, activo</text>
+
+  <!-- BATERIAS Table (Center) -->
+  <rect x="450" y="320" width="500" height="280" class="table" rx="4"/>
+  <rect x="450" y="320" width="500" height="25" class="table-header" rx="4"/>
+  <text x="700" y="340" class="table-title" text-anchor="middle">BATERIAS</text>
+
+  <rect x="450" y="345" width="500" height="18" class="table-row"/>
+  <text x="460" y="358" class="text pk">🔑 id (uuid)</text>
+
+  <rect x="450" y="363" width="500" height="18" class="table-row"/>
+  <text x="460" y="376" class="text">sku_dynamics (text) UNIQUE</text>
+
+  <rect x="450" y="381" width="500" height="18" class="table-row"/>
+  <text x="460" y="394" class="text">codigo_unico (text) UNIQUE</text>
+
+  <rect x="450" y="399" width="500" height="18" class="table-row"/>
+  <text x="460" y="412" class="text">lote (text)</text>
+
+  <rect x="450" y="417" width="500" height="18" class="table-row"/>
+  <text x="460" y="430" class="text fk">👉 piscina_id (uuid) FK → piscinas</text>
+
+  <rect x="450" y="435" width="500" height="18" class="table-row"/>
+  <text x="460" y="448" class="text fk">👉 proveedor_id (uuid) FK → proveedores</text>
+
+  <rect x="450" y="453" width="500" height="18" class="table-row"/>
+  <text x="460" y="466" class="text">fecha_compra (date)</text>
+
+  <rect x="450" y="471" width="500" height="18" class="table-row"/>
+  <text x="460" y="484" class="text">fecha_instalacion (date)</text>
+
+  <rect x="450" y="489" width="500" height="18" class="table-row"/>
+  <text x="460" y="502" class="text">voltaje_nominal (numeric)</text>
+
+  <rect x="450" y="507" width="500" height="18" class="table-row"/>
+  <text x="460" y="520" class="text">capacidad_kwh (numeric)</text>
+
+  <rect x="450" y="525" width="500" height="18" class="table-row"/>
+  <text x="460" y="538" class="text">estado (ENUM: ACTIVA, BAJA)</text>
+
+  <rect x="450" y="543" width="500" height="18" class="table-row"/>
+  <text x="460" y="556" class="text">created_at, updated_at</text>
+
+  <!-- EMPLEADOS Table -->
+  <rect x="50" y="560" width="280" height="160" class="table" rx="4"/>
+  <rect x="50" y="560" width="280" height="25" class="table-header" rx="4"/>
+  <text x="190" y="580" class="table-title" text-anchor="middle">EMPLEADOS</text>
+
+  <rect x="50" y="585" width="280" height="18" class="table-row"/>
+  <text x="60" y="598" class="text pk">🔑 id (uuid)</text>
+
+  <rect x="50" y="603" width="280" height="18" class="table-row"/>
+  <text x="60" y="616" class="text">nombre (text)</text>
+
+  <rect x="50" y="621" width="280" height="18" class="table-row"/>
+  <text x="60" y="634" class="text">cargo (text)</text>
+
+  <rect x="50" y="639" width="280" height="18" class="table-row"/>
+  <text x="60" y="652" class="text fk">👉 piscina_id (uuid) FK</text>
+
+  <rect x="50" y="657" width="280" height="18" class="table-row"/>
+  <text x="60" y="670" class="text">color, activo, timestamps</text>
+
+  <!-- CRONOGRAMA_PERSONAL Table -->
+  <rect x="420" y="660" width="380" height="180" class="table" rx="4"/>
+  <rect x="420" y="660" width="380" height="25" class="table-header" rx="4"/>
+  <text x="610" y="680" class="table-title" text-anchor="middle">CRONOGRAMA_PERSONAL</text>
+
+  <rect x="420" y="685" width="380" height="18" class="table-row"/>
+  <text x="430" y="698" class="text pk">🔑 id (uuid)</text>
+
+  <rect x="420" y="703" width="380" height="18" class="table-row"/>
+  <text x="430" y="716" class="text fk">👉 empleado_id (uuid) FK</text>
+
+  <rect x="420" y="721" width="380" height="18" class="table-row"/>
+  <text x="430" y="734" class="text">fecha (date)</text>
+
+  <rect x="420" y="739" width="380" height="18" class="table-row"/>
+  <text x="430" y="752" class="text">estado (ENUM: TURNO, LIBRE...)</text>
+
+  <rect x="420" y="757" width="380" height="18" class="table-row"/>
+  <text x="430" y="770" class="text">motivo, evidencia_url</text>
+
+  <rect x="420" y="775" width="380" height="18" class="table-row"/>
+  <text x="430" y="788" class="text">creado_por, timestamps</text>
+
+  <!-- PAROS_PISCINA Table -->
+  <rect x="900" y="560" width="300" height="160" class="table" rx="4"/>
+  <rect x="900" y="560" width="300" height="25" class="table-header" rx="4"/>
+  <text x="1050" y="580" class="table-title" text-anchor="middle">PAROS_PISCINA</text>
+
+  <rect x="900" y="585" width="300" height="18" class="table-row"/>
+  <text x="910" y="598" class="text pk">🔑 id (uuid)</text>
+
+  <rect x="900" y="603" width="300" height="18" class="table-row"/>
+  <text x="910" y="616" class="text fk">👉 piscina_id (uuid) FK</text>
+
+  <rect x="900" y="621" width="300" height="18" class="table-row"/>
+  <text x="910" y="634" class="text">fecha_inicio, fecha_fin (date)</text>
+
+  <rect x="900" y="639" width="300" height="18" class="table-row"/>
+  <text x="910" y="652" class="text">motivo (ENUM)</text>
+
+  <rect x="900" y="657" width="300" height="18" class="table-row"/>
+  <text x="910" y="670" class="text">tiempo_espera_dias, created_by</text>
+
+  <!-- COMENTARIOS_BATERIA Table -->
+  <rect x="1100" y="360" width="280" height="140" class="table" rx="4"/>
+  <rect x="1100" y="360" width="280" height="25" class="table-header" rx="4"/>
+  <text x="1240" y="380" class="table-title" text-anchor="middle">COMENTARIOS</text>
+
+  <rect x="1100" y="385" width="280" height="18" class="table-row"/>
+  <text x="1110" y="398" class="text pk">🔑 id (uuid)</text>
+
+  <rect x="1100" y="403" width="280" height="18" class="table-row"/>
+  <text x="1110" y="416" class="text fk">👉 bateria_id (uuid) FK</text>
+
+  <rect x="1100" y="421" width="280" height="18" class="table-row"/>
+  <text x="1110" y="434" class="text">contenido (text)</text>
+
+  <rect x="1100" y="439" width="280" height="18" class="table-row"/>
+  <text x="1110" y="452" class="text fk">👉 usuario_id (uuid) FK</text>
+
+  <rect x="1100" y="457" width="280" height="18" class="table-row"/>
+  <text x="1110" y="470" class="text">fecha_creacion, timestamps</text>
+
+  <!-- Relationships -->
+  <!-- PISCINAS to BATERIAS -->
+  <path d="M 270 160 Q 350 240 450 400" class="relationship"/>
+  <text x="320" y="240" class="label">1:N</text>
+
+  <!-- PROVEEDORES to BATERIAS -->
+  <path d="M 1100 180 Q 950 250 950 400" class="relationship"/>
+  <text x="920" y="280" class="label">1:N</text>
+
+  <!-- PISCINAS to PAROS_PISCINA -->
+  <path d="M 270 240 L 900 620" class="relationship"/>
+  <text x="550" y="450" class="label">1:N</text>
+
+  <!-- BATERIAS to COMENTARIOS -->
+  <path d="M 950 510 L 1100 460" class="relationship"/>
+  <text x="1000" y="485" class="label">1:N</text>
+
+  <!-- EMPLEADOS to CRONOGRAMA -->
+  <path d="M 330 650 L 420 720" class="relationship"/>
+  <text x="360" y="690" class="label">1:N</text>
+
+  <!-- Legend -->
+  <text x="50" y="850" style="font-size: 12px; font-weight: bold; fill: #1f2937;">
+    🔑 = Primary Key (Clave Primaria) | 👉 = Foreign Key (Relación) | ENUM = Valores enumerados | FK = Foreign Key
+  </text>
+</svg>
