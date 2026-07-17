@@ -347,7 +347,7 @@ WITH user_id_current AS (
 bateria_ids AS (
   SELECT id, ROW_NUMBER() OVER (ORDER BY id) as rn FROM baterias ORDER BY created_at LIMIT 8
 )
-INSERT INTO comentarios_bateria (bateria_id, contenido, usuario_id)
+INSERT INTO comentarios_bateria (bateria_id, contenido, usuario_id, fecha_creacion)
 SELECT
   b.id,
   CASE b.rn
