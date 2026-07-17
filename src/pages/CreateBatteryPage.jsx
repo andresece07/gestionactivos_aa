@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Plus } from 'lucide-react'
 import { batteryQueries, poolQueries } from '../lib/supabaseClient'
@@ -23,7 +23,7 @@ export default function CreateBatteryPage() {
   })
 
   // Cargar piscinas
-  useState(() => {
+  useEffect(() => {
     loadPools()
   }, [])
 
