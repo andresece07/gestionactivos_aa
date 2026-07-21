@@ -2,6 +2,10 @@
 
 Sistema web para registrar, monitorear y gestionar baterías fotovoltaicas en sistemas de acuacultura. Construido con React, Vite, Supabase y Cloudflare Pages.
 
+## 🌐 Sitio en Producción
+
+**URL**: https://gestionactivos-aa.pages.dev/
+
 ## 🎯 Características
 
 - ✅ Autenticación con Supabase Auth

@@ -54,7 +54,7 @@ git push -u origin main
 
 ### Resultado
 
-- ✅ Tu app en: `https://gestion-activos-xyz.pages.dev`
+- ✅ Tu app en: **https://gestionactivos-aa.pages.dev/**
 - ✅ Deployment automático cada vez que hagas `git push`
 - ✅ SSL/TLS gratis
 - ✅ CDN global
