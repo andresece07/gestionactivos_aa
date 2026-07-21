@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Menu, X, LogOut, User, Home, Battery, Calendar } from 'lucide-react'
+import { Menu, X, LogOut, User, Home, Battery, Calendar, Truck } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 
 export const Navbar = () => {
@@ -33,6 +33,10 @@ export const Navbar = () => {
             <Link to="/baterias" className="flex items-center gap-2 text-slate-600 hover:text-primary-600">
               <Battery className="h-4 w-4" />
               Baterías
+            </Link>
+            <Link to="/proveedores" className="flex items-center gap-2 text-slate-600 hover:text-primary-600">
+              <Truck className="h-4 w-4" />
+              Proveedores
             </Link>
             <Link to="/cronograma" className="flex items-center gap-2 text-slate-600 hover:text-primary-600">
               <Calendar className="h-4 w-4" />
@@ -85,6 +89,13 @@ export const Navbar = () => {
                 className="block px-2 py-2 rounded hover:bg-slate-100 text-slate-600"
               >
                 Baterías
+              </Link>
+              <Link
+                to="/proveedores"
+                onClick={() => setIsOpen(false)}
+                className="block px-2 py-2 rounded hover:bg-slate-100 text-slate-600"
+              >
+                Proveedores
               </Link>
               <Link
                 to="/cronograma"

@@ -300,6 +300,52 @@ export const supplierQueries = {
 
     return { data, error }
   },
+
+  // Crear nuevo proveedor
+  create: async (supplier) => {
+    const { data, error } = await supabase
+      .from('proveedores')
+      .insert([{
+        nombre: supplier.nombre,
+        contacto: supplier.contacto,
+        email: supplier.email,
+        telefono: supplier.telefono,
+        direccion: supplier.direccion,
+        activo: true,
+      }])
+      .select()
+
+    return { data, error }
+  },
+
+  // Actualizar proveedor
+  update: async (id, supplier) => {
+    const { data, error } = await supabase
+      .from('proveedores')
+      .update({
+        nombre: supplier.nombre,
+        contacto: supplier.contacto,
+        email: supplier.email,
+        telefono: supplier.telefono,
+        direccion: supplier.direccion,
+        updated_at: new Date(),
+      })
+      .eq('id', id)
+      .select()
+
+    return { data, error }
+  },
+
+  // Desactivar proveedor
+  deactivate: async (id) => {
+    const { data, error } = await supabase
+      .from('proveedores')
+      .update({ activo: false })
+      .eq('id', id)
+      .select()
+
+    return { data, error }
+  },
 }
 
 // Funciones para empleados
