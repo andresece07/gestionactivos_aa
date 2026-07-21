@@ -1,37 +1,14 @@
 -- ============================================================================
--- PASO 1: Crear tabla proveedores
+-- PASO 1: Habilitar RLS para proveedores y baterías
 -- ============================================================================
-
-CREATE TABLE IF NOT EXISTS proveedores (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  nombre text NOT NULL UNIQUE,
-  persona_contacto text,
-  email text,
-  telefono text,
-  ciudad text,
-  pais text,
-  activo boolean DEFAULT true,
-  created_at timestamp with time zone DEFAULT now(),
-  updated_at timestamp with time zone
-);
-
-CREATE INDEX IF NOT EXISTS idx_proveedores_nombre ON proveedores(nombre);
-CREATE INDEX IF NOT EXISTS idx_proveedores_activo ON proveedores(activo);
 
 ALTER TABLE proveedores ENABLE ROW LEVEL SECURITY;
 CREATE POLICY IF NOT EXISTS "proveedores_select_all" ON proveedores FOR SELECT USING (true);
+CREATE POLICY IF NOT EXISTS "proveedores_insert_auth" ON proveedores FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
+CREATE POLICY IF NOT EXISTS "proveedores_update_auth" ON proveedores FOR UPDATE USING (auth.uid() IS NOT NULL);
 
 -- ============================================================================
--- PASO 2: Agregar Foreign Key y índices
--- ============================================================================
-
-ALTER TABLE baterias ADD CONSTRAINT IF NOT EXISTS fk_baterias_proveedor
-  FOREIGN KEY (proveedor_id) REFERENCES proveedores(id) ON DELETE SET NULL;
-
-CREATE INDEX IF NOT EXISTS idx_baterias_proveedor ON baterias(proveedor_id);
-
--- ============================================================================
--- PASO 3: Insertar datos de proveedores
+-- PASO 2: Insertar datos de proveedores
 -- ============================================================================
 
 INSERT INTO proveedores (nombre, persona_contacto, email, telefono, ciudad, pais, activo)
@@ -43,7 +20,7 @@ VALUES
 ON CONFLICT (nombre) DO NOTHING;
 
 -- ============================================================================
--- PASO 4: Crear tabla empleados
+-- PASO 3: Crear tabla empleados
 -- ============================================================================
 
 DO $$
@@ -71,7 +48,7 @@ ALTER TABLE empleados ENABLE ROW LEVEL SECURITY;
 CREATE POLICY IF NOT EXISTS "empleados_select_all" ON empleados FOR SELECT USING (true);
 
 -- ============================================================================
--- PASO 5: Crear tabla cronograma_personal
+-- PASO 4: Crear tabla cronograma_personal
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS cronograma_personal (
@@ -97,7 +74,7 @@ CREATE POLICY IF NOT EXISTS "cronograma_insert_auth" ON cronograma_personal FOR 
 CREATE POLICY IF NOT EXISTS "cronograma_update_auth" ON cronograma_personal FOR UPDATE USING (auth.uid() IS NOT NULL);
 
 -- ============================================================================
--- PASO 6: Insertar empleados de prueba
+-- PASO 5: Insertar empleados de prueba
 -- ============================================================================
 
 INSERT INTO empleados (nombre, cargo, color, activo)

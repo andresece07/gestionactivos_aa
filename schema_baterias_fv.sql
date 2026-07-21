@@ -27,12 +27,30 @@ CREATE TABLE piscinas (
 
 CREATE INDEX idx_piscinas_nombre ON piscinas(nombre);
 
+CREATE TABLE proveedores (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  nombre text NOT NULL UNIQUE,
+  persona_contacto text,
+  email text,
+  telefono text,
+  ciudad text,
+  pais text,
+  activo boolean DEFAULT true,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone,
+  CONSTRAINT nombre_no_vacio CHECK (length(trim(nombre)) > 0)
+);
+
+CREATE INDEX idx_proveedores_nombre ON proveedores(nombre);
+CREATE INDEX idx_proveedores_activo ON proveedores(activo);
+
 CREATE TABLE baterias (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   sku_dynamics text NOT NULL UNIQUE,
   codigo_unico text NOT NULL UNIQUE,
   lote text,
   piscina_id uuid NOT NULL REFERENCES piscinas(id) ON DELETE RESTRICT,
+  proveedor_id uuid REFERENCES proveedores(id) ON DELETE SET NULL,
   fecha_compra date NOT NULL,
   fecha_instalacion date NOT NULL,
   voltaje_nominal numeric(5, 1) NOT NULL,
@@ -48,6 +66,7 @@ CREATE TABLE baterias (
 );
 
 CREATE INDEX idx_baterias_piscina ON baterias(piscina_id);
+CREATE INDEX idx_baterias_proveedor ON baterias(proveedor_id);
 CREATE INDEX idx_baterias_estado ON baterias(estado);
 CREATE INDEX idx_baterias_sku ON baterias(sku_dynamics);
 
