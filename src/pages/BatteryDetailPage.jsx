@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
-import { ArrowLeft, MessageSquare, Info, History, Plus, QrCode, Edit2, Trash2, Calendar } from 'lucide-react'
+import { ArrowLeft, MessageSquare, Info, History, Plus, QrCode, Edit2, Trash2, Calendar, Download } from 'lucide-react'
+import * as XLSX from 'xlsx'
 import { batteryQueries, commentQueries, movimientosQueries, poolQueries } from '../lib/supabaseClient'
 import { Loading } from '../components/Loading'
 import { ErrorPage } from '../components/Error'
@@ -162,6 +163,46 @@ export default function BatteryDetailPage() {
     }
   }
 
+  const handleExportExcel = () => {
+    if (movimientos.length === 0) {
+      setError('No hay movimientos para descargar')
+      return
+    }
+
+    try {
+      // Preparar datos para Excel
+      const data = movimientos.map(mov => ({
+        'Fecha': new Date(mov.fecha_movimiento).toLocaleString(),
+        'Tipo': mov.tipo_movimiento,
+        'Piscina': mov.piscinas?.nombre || '',
+        'Tolva': mov.tolva,
+        'Estado': mov.estado_bateria,
+        'Ciclos': mov.ciclos_registrados || '',
+        'Capacidad %': mov.capacidad_residual || '',
+        'Voltaje Inicial': mov.voltaje_inicial || '',
+        'Voltaje Final': mov.voltaje_final || '',
+        'Temperatura': mov.temperatura || '',
+        'Observaciones': mov.observaciones || '',
+        'Usuario': mov.usuario_nombre || '',
+      }))
+
+      // Crear workbook
+      const ws = XLSX.utils.json_to_sheet(data)
+      const wb = XLSX.utils.book_new()
+      XLSX.utils.book_append_sheet(wb, ws, 'Movimientos')
+
+      // Ajustar ancho de columnas
+      const colWidths = [20, 15, 15, 15, 18, 10, 12, 15, 15, 12, 25, 15]
+      ws['!cols'] = colWidths.map(width => ({ wch: width }))
+
+      // Descargar
+      const fileName = `historial_${battery.codigo_unico}_${new Date().getTime()}.xlsx`
+      XLSX.writeFile(wb, fileName)
+    } catch (err) {
+      setError('Error al descargar Excel: ' + err.message)
+    }
+  }
+
   if (loading) {
     return <Loading message="Cargando detalle de batería..." />
   }
@@ -278,13 +319,25 @@ export default function BatteryDetailPage() {
               <History className="h-5 w-5" />
               Historial de Movimientos
             </h3>
-            <button
-              onClick={() => setShowMovimientoForm(!showMovimientoForm)}
-              className="btn-primary flex items-center gap-2 text-sm"
-            >
-              <Plus className="h-4 w-4" />
-              Agregar Movimiento
-            </button>
+            <div className="flex gap-2">
+              {movimientos.length > 0 && (
+                <button
+                  onClick={handleExportExcel}
+                  className="btn-secondary flex items-center gap-2 text-sm"
+                  title="Descargar como Excel"
+                >
+                  <Download className="h-4 w-4" />
+                  Excel
+                </button>
+              )}
+              <button
+                onClick={() => setShowMovimientoForm(!showMovimientoForm)}
+                className="btn-primary flex items-center gap-2 text-sm"
+              >
+                <Plus className="h-4 w-4" />
+                Agregar Movimiento
+              </button>
+            </div>
           </div>
 
           {error && (

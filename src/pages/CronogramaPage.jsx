@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Calendar, ChevronLeft, ChevronRight, Download, X, Plus } from 'lucide-react'
+import * as XLSX from 'xlsx'
 import { employeeQueries, scheduleQueries, supabase } from '../lib/supabaseClient'
 import { Loading } from '../components/Loading'
 import { ErrorAlert } from '../components/Error'
@@ -174,47 +175,59 @@ export default function CronogramaPage() {
 
   const handleExportExcel = (orientation = 'horizontal') => {
     const dates = getDatesInRange()
-    const rows = []
+    const data = []
 
     if (orientation === 'horizontal') {
-      rows.push(['Personal', ...dates.map(d => d.getDate())])
+      // Encabezado
+      const header = {
+        'Personal': 'Personal',
+        ...Object.fromEntries(dates.map(d => [d.getDate().toString(), d.getDate()]))
+      }
+      data.push(header)
 
+      // Datos
       employees.forEach(emp => {
-        const row = [emp.nombre]
+        const row = { 'Personal': emp.nombre }
         dates.forEach(date => {
           const dateStr = date.toISOString().split('T')[0]
           const key = `${emp.id}-${dateStr}`
           const record = scheduleData[key]
-          row.push(record ? ESTADO_LABELS[record.estado] : '-')
+          row[date.getDate().toString()] = record ? ESTADO_LABELS[record.estado] : '-'
         })
-        rows.push(row)
+        data.push(row)
       })
     } else {
-      rows.push(['Fecha', ...employees.map(emp => emp.nombre)])
+      // Vertical: Fecha en filas, empleados en columnas
+      const header = {
+        'Fecha': 'Fecha',
+        ...Object.fromEntries(employees.map(emp => [emp.nombre, emp.nombre]))
+      }
+      data.push(header)
 
       dates.forEach(date => {
         const dateStr = date.toISOString().split('T')[0]
-        const row = [date.toLocaleDateString('es-ES')]
+        const row = { 'Fecha': date.toLocaleDateString('es-ES') }
         employees.forEach(emp => {
           const key = `${emp.id}-${dateStr}`
           const record = scheduleData[key]
-          row.push(record ? ESTADO_LABELS[record.estado] : '-')
+          row[emp.nombre] = record ? ESTADO_LABELS[record.estado] : '-'
         })
-        rows.push(row)
+        data.push(row)
       })
     }
 
-    const csv = rows.map(row => row.map(cell => `"${cell}"`).join(',')).join('\n')
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
-    const link = document.createElement('a')
-    const url = URL.createObjectURL(blob)
-    link.setAttribute('href', url)
-    link.setAttribute(
-      'download',
-      `cronograma_${orientation}_${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}.csv`
-    )
-    link.click()
-    URL.revokeObjectURL(url)
+    // Crear workbook Excel
+    const ws = XLSX.utils.json_to_sheet(data)
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws, 'Cronograma')
+
+    // Ajustar ancho de columnas
+    const colWidth = orientation === 'horizontal' ? 12 : 20
+    ws['!cols'] = Array(Object.keys(data[0] || {}).length).fill({ wch: colWidth })
+
+    // Descargar
+    const fileName = `cronograma_${orientation}_${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}.xlsx`
+    XLSX.writeFile(wb, fileName)
   }
 
   if (loading) {
