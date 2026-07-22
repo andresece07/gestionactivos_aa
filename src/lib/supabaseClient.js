@@ -455,6 +455,128 @@ export const scheduleQueries = {
   },
 }
 
+// Funciones para movimientos de baterías
+export const movimientosQueries = {
+  // Obtener todos los movimientos de una batería
+  getByBateria: async (bateriaId) => {
+    const { data, error } = await supabase
+      .from('movimientos_baterias')
+      .select(`
+        *,
+        baterias(codigo_unico, estado),
+        piscinas(nombre)
+      `)
+      .eq('bateria_id', bateriaId)
+      .order('fecha_movimiento', { ascending: false })
+
+    return { data, error }
+  },
+
+  // Obtener todos los movimientos con filtros
+  getAll: async (filters = {}) => {
+    let query = supabase
+      .from('movimientos_baterias')
+      .select(`
+        *,
+        baterias(codigo_unico, estado),
+        piscinas(nombre)
+      `)
+
+    if (filters.bateriaId) {
+      query = query.eq('bateria_id', filters.bateriaId)
+    }
+
+    if (filters.piscinaId) {
+      query = query.eq('piscina_id', filters.piscinaId)
+    }
+
+    if (filters.tipo) {
+      query = query.eq('tipo_movimiento', filters.tipo)
+    }
+
+    if (filters.estado) {
+      query = query.eq('estado_bateria', filters.estado)
+    }
+
+    if (filters.usuarioId) {
+      query = query.eq('usuario_id', filters.usuarioId)
+    }
+
+    if (filters.fechaInicio) {
+      query = query.gte('fecha_movimiento', filters.fechaInicio)
+    }
+
+    if (filters.fechaFin) {
+      query = query.lte('fecha_movimiento', filters.fechaFin)
+    }
+
+    const result = await query.order('fecha_movimiento', { ascending: false })
+    return result
+  },
+
+  // Obtener un movimiento específico
+  getById: async (id) => {
+    const { data, error } = await supabase
+      .from('movimientos_baterias')
+      .select(`
+        *,
+        baterias(codigo_unico, estado),
+        piscinas(nombre)
+      `)
+      .eq('id', id)
+      .single()
+
+    return { data, error }
+  },
+
+  // Crear nuevo movimiento
+  create: async (movimiento) => {
+    const user = await supabaseAuth.getUser()
+    const { data, error } = await supabase
+      .from('movimientos_baterias')
+      .insert([{
+        ...movimiento,
+        usuario_id: user?.id,
+        usuario_nombre: user?.email,
+      }])
+      .select()
+
+    return { data, error }
+  },
+
+  // Actualizar movimiento
+  update: async (id, updates) => {
+    const { data, error } = await supabase
+      .from('movimientos_baterias')
+      .update(updates)
+      .eq('id', id)
+      .select()
+
+    return { data, error }
+  },
+
+  // Eliminar movimiento
+  delete: async (id) => {
+    const { error } = await supabase
+      .from('movimientos_baterias')
+      .delete()
+      .eq('id', id)
+
+    return { error }
+  },
+
+  // Buscar por código único de batería (para QR)
+  getByCodigoUnico: async (codigoUnico) => {
+    const { data, error } = await supabase
+      .from('baterias')
+      .select('id')
+      .eq('codigo_unico', codigoUnico)
+      .single()
+
+    return { data, error }
+  }
+}
+
 // Función para escuchar cambios en tiempo real
 export const subscribeToChanges = (table, callback) => {
   const subscription = supabase

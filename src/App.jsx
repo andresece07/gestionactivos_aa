@@ -11,6 +11,7 @@ import CreateBatteryPage from './pages/CreateBatteryPage'
 import StoppagePage from './pages/StoppagePage'
 import CronogramaPage from './pages/CronogramaPage'
 import ProvidersPage from './pages/ProvidersPage'
+import QRScannerPage from './pages/QRScannerPage'
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth()
@@ -105,6 +106,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <ProvidersPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/qr-scanner"
+          element={
+            <ProtectedRoute>
+              <QRScannerPage />
             </ProtectedRoute>
           }
         />
