@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Menu, X, LogOut, User, Home } from 'lucide-react'
+import { Menu, X, LogOut, User, Home, Battery } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 
 export const Navbar = () => {
