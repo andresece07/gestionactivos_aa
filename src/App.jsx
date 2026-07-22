@@ -3,6 +3,7 @@ import { useAuth } from './hooks/useAuth'
 import { Navbar } from './components/Navbar'
 import { Loading } from './components/Loading'
 import LoginPage from './pages/LoginPage'
+import ModulesPage from './pages/ModulesPage'
 import DashboardPage from './pages/DashboardPage'
 import BatteriesPage from './pages/BatteriesPage'
 import BatteryDetailPage from './pages/BatteryDetailPage'
@@ -45,6 +46,14 @@ export default function App() {
         {/* Protected Routes */}
         <Route
           path="/"
+          element={
+            <ProtectedRoute>
+              <ModulesPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard"
           element={
             <ProtectedRoute>
               <DashboardPage />
