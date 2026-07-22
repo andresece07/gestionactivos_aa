@@ -8,7 +8,6 @@ import DashboardPage from './pages/DashboardPage'
 import BatteriesPage from './pages/BatteriesPage'
 import BatteryDetailPage from './pages/BatteryDetailPage'
 import CreateBatteryPage from './pages/CreateBatteryPage'
-import StoppagePage from './pages/StoppagePage'
 import CronogramaPage from './pages/CronogramaPage'
 import ProvidersPage from './pages/ProvidersPage'
 import QRScannerPage from './pages/QRScannerPage'
@@ -82,14 +81,6 @@ export default function App() {
           element={
             <ProtectedRoute>
               <BatteryDetailPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/paros"
-          element={
-            <ProtectedRoute>
-              <StoppagePage />
             </ProtectedRoute>
           }
         />

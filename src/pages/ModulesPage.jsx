@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { Zap, Truck, Calendar, AlertTriangle, BarChart3 } from 'lucide-react'
+import { Zap, Truck, Calendar, BarChart3 } from 'lucide-react'
 
 export default function ModulesPage() {
   const navigate = useNavigate()
@@ -32,13 +32,6 @@ export default function ModulesPage() {
       description: 'Personal y horarios',
       path: '/cronograma',
       color: 'text-green-600'
-    },
-    {
-      icon: AlertTriangle,
-      title: 'Paros',
-      description: 'Registro de paradas',
-      path: '/paros',
-      color: 'text-red-600'
     }
   ]
 
