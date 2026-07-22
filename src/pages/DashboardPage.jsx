@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
-import { Battery, AlertCircle, CheckCircle } from 'lucide-react'
+import { Battery, AlertCircle, CheckCircle, Zap, Truck, Calendar, AlertTriangle, ChevronRight } from 'lucide-react'
 import { batteryQueries, poolQueries, stoppageQueries } from '../lib/supabaseClient'
 import { Loading } from '../components/Loading'
 import { ErrorAlert } from '../components/Error'
 
 export default function DashboardPage() {
+  const navigate = useNavigate()
   const [batteries, setBatteries] = useState([])
   const [pools, setPools] = useState([])
   const [stoppages, setStoppages] = useState([])
@@ -102,6 +104,80 @@ export default function DashboardPage() {
             <ErrorAlert message={error} onClose={() => setError(null)} />
           </div>
         )}
+
+        {/* Módulos de Acceso Rápido */}
+        <div className="mb-8">
+          <h2 className="text-xl font-bold text-slate-900 mb-4">Módulos</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Módulo Baterías */}
+            <button
+              onClick={() => navigate('/batteries')}
+              className="card hover:shadow-lg transition cursor-pointer group"
+            >
+              <div className="flex items-start justify-between">
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <Zap className="h-6 w-6 text-primary-600" />
+                    <h3 className="font-semibold text-slate-900">Baterías</h3>
+                  </div>
+                  <p className="text-sm text-slate-600">Gestión y monitoreo</p>
+                </div>
+                <ChevronRight className="h-5 w-5 text-slate-400 group-hover:text-primary-600 transition" />
+              </div>
+            </button>
+
+            {/* Módulo Proveedores */}
+            <button
+              onClick={() => navigate('/providers')}
+              className="card hover:shadow-lg transition cursor-pointer group"
+            >
+              <div className="flex items-start justify-between">
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <Truck className="h-6 w-6 text-primary-600" />
+                    <h3 className="font-semibold text-slate-900">Proveedores</h3>
+                  </div>
+                  <p className="text-sm text-slate-600">Gestión de suministros</p>
+                </div>
+                <ChevronRight className="h-5 w-5 text-slate-400 group-hover:text-primary-600 transition" />
+              </div>
+            </button>
+
+            {/* Módulo Cronograma */}
+            <button
+              onClick={() => navigate('/cronograma')}
+              className="card hover:shadow-lg transition cursor-pointer group"
+            >
+              <div className="flex items-start justify-between">
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <Calendar className="h-6 w-6 text-primary-600" />
+                    <h3 className="font-semibold text-slate-900">Cronograma</h3>
+                  </div>
+                  <p className="text-sm text-slate-600">Personal y horarios</p>
+                </div>
+                <ChevronRight className="h-5 w-5 text-slate-400 group-hover:text-primary-600 transition" />
+              </div>
+            </button>
+
+            {/* Módulo Paros */}
+            <button
+              onClick={() => navigate('/stoppages')}
+              className="card hover:shadow-lg transition cursor-pointer group"
+            >
+              <div className="flex items-start justify-between">
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <AlertTriangle className="h-6 w-6 text-primary-600" />
+                    <h3 className="font-semibold text-slate-900">Paros</h3>
+                  </div>
+                  <p className="text-sm text-slate-600">Registro de paradas</p>
+                </div>
+                <ChevronRight className="h-5 w-5 text-slate-400 group-hover:text-primary-600 transition" />
+              </div>
+            </button>
+          </div>
+        </div>
 
         {/* KPI Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
