@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { Zap, Truck, Calendar, AlertTriangle, BarChart3, QrCode } from 'lucide-react'
+import { Zap, Truck, Calendar, AlertTriangle, BarChart3 } from 'lucide-react'
 
 export default function ModulesPage() {
   const navigate = useNavigate()
@@ -39,13 +39,6 @@ export default function ModulesPage() {
       description: 'Registro de paradas',
       path: '/paros',
       color: 'text-red-600'
-    },
-    {
-      icon: QrCode,
-      title: 'Lectura QR',
-      description: 'Escanear código de batería',
-      path: '/qr-scanner',
-      color: 'text-purple-600'
     }
   ]
 
