@@ -3,6 +3,8 @@ import { Calendar, ChevronLeft, ChevronRight, Download, X, Plus } from 'lucide-r
 import { employeeQueries, scheduleQueries, supabase } from '../lib/supabaseClient'
 import { Loading } from '../components/Loading'
 import { ErrorAlert } from '../components/Error'
+import { ScheduleCell } from '../components/ScheduleCell'
+import { useScheduleGrid } from '../hooks/useScheduleGrid'
 
 const ESTADO_COLORS = {
   TURNO: '#0d6efd',
@@ -27,21 +29,14 @@ export default function CronogramaPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [currentDate, setCurrentDate] = useState(new Date())
-  const [isSelecting, setIsSelecting] = useState(false)
-  const [startCell, setStartCell] = useState(null)
-  const [selectedDates, setSelectedDates] = useState([])
-  const [selectedEmployee, setSelectedEmployee] = useState(null)
-  const [showModal, setShowModal] = useState(false)
   const [showEmployeeModal, setShowEmployeeModal] = useState(false)
   const [scheduleData, setScheduleData] = useState({})
-  const [formData, setFormData] = useState({
-    estado: 'TURNO',
-    motivo: '',
-  })
   const [employeeForm, setEmployeeForm] = useState({
     nombre: '',
     cargo: '',
   })
+
+  const grid = useScheduleGrid()
 
   const DAYS_IN_RANGE = 35
 
@@ -113,61 +108,34 @@ export default function CronogramaPage() {
     return dates
   }
 
-  const handleCellMouseDown = (employeeId, date) => {
-    if (selectedEmployee && selectedEmployee !== employeeId) return
 
-    setIsSelecting(true)
-    setStartCell(date)
-    setSelectedEmployee(employeeId)
-    setSelectedDates([date])
-  }
+  const handleCellClick = (employeeId, date) => {
+    if (grid.isSelecting) return
 
-  const handleCellMouseEnter = (employeeId, date) => {
-    if (!isSelecting || selectedEmployee !== employeeId || !startCell) return
-
-    const start = new Date(startCell)
-    const current = new Date(date)
-    const dates = []
-
-    const minDate = start < current ? start : current
-    const maxDate = start < current ? current : start
-
-    for (let d = new Date(minDate); d <= maxDate; d.setDate(d.getDate() + 1)) {
-      dates.push(new Date(d).toISOString().split('T')[0])
-    }
-
-    setSelectedDates(dates)
-  }
-
-  const handleCellMouseUp = () => {
-    setIsSelecting(false)
-    if (selectedDates.length > 0 && selectedEmployee) {
-      setShowModal(true)
-    }
+    const dateStr = date.toISOString().split('T')[0]
+    grid.setSelectedEmployee(employeeId)
+    grid.setSelectedDates([dateStr])
+    grid.setShowModal(true)
   }
 
   const handleApply = async () => {
-    if (!selectedEmployee || selectedDates.length === 0) return
+    if (!grid.selectedEmployee || grid.selectedDates.length === 0) return
 
     try {
-      const startDate = selectedDates[0]
-      const endDate = selectedDates[selectedDates.length - 1]
+      const startDate = grid.selectedDates[0]
+      const endDate = grid.selectedDates[grid.selectedDates.length - 1]
 
       const { error: updateError } = await scheduleQueries.updateRange(
-        selectedEmployee,
+        grid.selectedEmployee,
         startDate,
         endDate,
-        formData.estado,
-        formData.motivo || null
+        grid.formData.estado,
+        grid.formData.motivo || null
       )
 
       if (updateError) throw updateError
 
-      setShowModal(false)
-      setSelectedDates([])
-      setSelectedEmployee(null)
-      setFormData({ estado: 'TURNO', motivo: '' })
-
+      grid.resetSelection()
       await loadEmployees()
     } catch (err) {
       setError(err.message || 'Error al guardar cambios')
@@ -204,22 +172,37 @@ export default function CronogramaPage() {
     }
   }
 
-  const handleExportExcel = () => {
+  const handleExportExcel = (orientation = 'horizontal') => {
     const dates = getDatesInRange()
     const rows = []
 
-    rows.push(['Personal', ...dates.map(d => d.getDate())])
+    if (orientation === 'horizontal') {
+      rows.push(['Personal', ...dates.map(d => d.getDate())])
 
-    employees.forEach(emp => {
-      const row = [emp.nombre]
+      employees.forEach(emp => {
+        const row = [emp.nombre]
+        dates.forEach(date => {
+          const dateStr = date.toISOString().split('T')[0]
+          const key = `${emp.id}-${dateStr}`
+          const record = scheduleData[key]
+          row.push(record ? ESTADO_LABELS[record.estado] : '-')
+        })
+        rows.push(row)
+      })
+    } else {
+      rows.push(['Fecha', ...employees.map(emp => emp.nombre)])
+
       dates.forEach(date => {
         const dateStr = date.toISOString().split('T')[0]
-        const key = `${emp.id}-${dateStr}`
-        const record = scheduleData[key]
-        row.push(record ? ESTADO_LABELS[record.estado] : '-')
+        const row = [date.toLocaleDateString('es-ES')]
+        employees.forEach(emp => {
+          const key = `${emp.id}-${dateStr}`
+          const record = scheduleData[key]
+          row.push(record ? ESTADO_LABELS[record.estado] : '-')
+        })
+        rows.push(row)
       })
-      rows.push(row)
-    })
+    }
 
     const csv = rows.map(row => row.map(cell => `"${cell}"`).join(',')).join('\n')
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
@@ -228,7 +211,7 @@ export default function CronogramaPage() {
     link.setAttribute('href', url)
     link.setAttribute(
       'download',
-      `cronograma_${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}.csv`
+      `cronograma_${orientation}_${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}.csv`
     )
     link.click()
     URL.revokeObjectURL(url)
@@ -289,10 +272,28 @@ export default function CronogramaPage() {
                 <Plus className="h-4 w-4" />
                 Nuevo Personal
               </button>
-              <button onClick={handleExportExcel} className="btn-primary flex items-center gap-2">
-                <Download className="h-4 w-4" />
-                Excel
-              </button>
+              <div className="relative group">
+                <button className="btn-primary flex items-center gap-2">
+                  <Download className="h-4 w-4" />
+                  Descargar
+                </button>
+                <div className="absolute right-0 mt-2 w-48 bg-white border border-slate-200 rounded-lg shadow-lg hidden group-hover:block z-20">
+                  <button
+                    onClick={() => handleExportExcel('horizontal')}
+                    className="w-full text-left px-4 py-2 hover:bg-slate-50 flex items-center gap-2 border-b border-slate-200"
+                  >
+                    <Download className="h-4 w-4" />
+                    Horizontal (Empleados en filas)
+                  </button>
+                  <button
+                    onClick={() => handleExportExcel('vertical')}
+                    className="w-full text-left px-4 py-2 hover:bg-slate-50 flex items-center gap-2"
+                  >
+                    <Download className="h-4 w-4" />
+                    Vertical (Fechas en filas)
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -331,27 +332,20 @@ export default function CronogramaPage() {
                       const dateStr = date.toISOString().split('T')[0]
                       const key = `${emp.id}-${dateStr}`
                       const record = scheduleData[key]
-                      const isSelected = selectedDates.includes(dateStr) && selectedEmployee === emp.id
+                      const isSelected = grid.selectedDates.includes(dateStr) && grid.selectedEmployee === emp.id
 
                       return (
-                        <td
+                        <ScheduleCell
                           key={dateStr}
-                          className={`px-2 py-3 text-center cursor-pointer border border-slate-200 text-xs font-semibold transition ${
-                            isSelected ? 'ring-2 ring-primary-500 ring-inset' : ''
-                          }`}
-                          style={{
-                            backgroundColor: record
-                              ? ESTADO_COLORS[record.estado]
-                              : 'white',
-                            color: record?.estado === 'FALTA' ? '#000' : '#fff',
-                          }}
-                          onMouseDown={() => handleCellMouseDown(emp.id, date)}
-                          onMouseEnter={() => handleCellMouseEnter(emp.id, date)}
-                          onMouseUp={handleCellMouseUp}
-                          title={record ? record.estado : '—'}
-                        >
-                          {record ? ESTADO_LABELS[record.estado] : '—'}
-                        </td>
+                          record={record}
+                          date={date}
+                          employeeId={emp.id}
+                          isSelected={isSelected}
+                          onMouseDown={grid.handleCellMouseDown}
+                          onMouseEnter={grid.handleCellMouseEnter}
+                          onMouseUp={grid.handleCellMouseUp}
+                          onClick={handleCellClick}
+                        />
                       )
                     })}
                   </tr>
@@ -363,6 +357,9 @@ export default function CronogramaPage() {
 
         {/* Legend */}
         <div className="card">
+          <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded text-sm text-blue-800">
+            <strong>💡 Tip:</strong> Haz <strong>clic</strong> en un cuadro para alternar entre Libre y Turno. Usa <strong>drag</strong> para aplicar un estado a varios días.
+          </div>
           <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
             <div className="flex items-center gap-2">
               <div
@@ -408,13 +405,13 @@ export default function CronogramaPage() {
       </div>
 
       {/* Modal Cambio de Estado */}
-      {showModal && (
+      {grid.showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-lg max-w-md w-full mx-4">
             <div className="bg-primary-600 text-white p-4 flex items-center justify-between">
               <h3 className="text-lg font-bold">Aplicar a Selección</h3>
               <button
-                onClick={() => setShowModal(false)}
+                onClick={() => grid.setShowModal(false)}
                 className="text-white hover:bg-primary-700 p-1 rounded"
               >
                 <X className="h-5 w-5" />
@@ -427,8 +424,8 @@ export default function CronogramaPage() {
                   Estado
                 </label>
                 <select
-                  value={formData.estado}
-                  onChange={e => setFormData({ ...formData, estado: e.target.value })}
+                  value={grid.formData.estado}
+                  onChange={e => grid.setFormData({ ...grid.formData, estado: e.target.value })}
                   className="input w-full"
                 >
                   {Object.entries(ESTADO_LABELS).map(([key, label]) => (
@@ -444,8 +441,8 @@ export default function CronogramaPage() {
                   Motivo (Opcional)
                 </label>
                 <textarea
-                  value={formData.motivo}
-                  onChange={e => setFormData({ ...formData, motivo: e.target.value })}
+                  value={grid.formData.motivo}
+                  onChange={e => grid.setFormData({ ...grid.formData, motivo: e.target.value })}
                   className="input w-full"
                   rows="3"
                   placeholder="Ej: Enfermedad, vacaciones programadas..."
@@ -453,12 +450,12 @@ export default function CronogramaPage() {
               </div>
 
               <p className="text-sm text-slate-600">
-                <strong>Rango:</strong> {selectedDates[0]} a {selectedDates[selectedDates.length - 1]} ({selectedDates.length} días)
+                <strong>Rango:</strong> {grid.selectedDates[0]} a {grid.selectedDates[grid.selectedDates.length - 1]} ({grid.selectedDates.length} días)
               </p>
             </div>
 
             <div className="bg-slate-100 px-6 py-4 flex gap-2 justify-end">
-              <button onClick={() => setShowModal(false)} className="btn-secondary">
+              <button onClick={() => grid.setShowModal(false)} className="btn-secondary">
                 Cancelar
               </button>
               <button onClick={handleApply} className="btn-primary">
