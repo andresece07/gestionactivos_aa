@@ -18,10 +18,13 @@ export default function CreateBatteryPage() {
     lote: '',
     proveedor_id: '',
     piscina_id: '',
+    finca: '',
+    zona: '',
+    tolva: '',
     fecha_compra: '',
     fecha_instalacion: '',
     voltaje_nominal: '',
-    capacidad_kwh: '',
+    amperios: '',
   })
 
   // Cargar piscinas
@@ -58,7 +61,7 @@ export default function CreateBatteryPage() {
   const handleSubmit = async (e) => {
     e.preventDefault()
 
-    if (!formData.sku_dynamics || !formData.codigo_unico || !formData.piscina_id) {
+    if (!formData.sku_dynamics || !formData.codigo_unico || !formData.piscina_id || !formData.finca || !formData.zona || !formData.tolva) {
       setError('Por favor completa todos los campos requeridos')
       return
     }
@@ -77,10 +80,13 @@ export default function CreateBatteryPage() {
         lote: formData.lote || null,
         proveedor_id: formData.proveedor_id || null,
         piscina_id: formData.piscina_id,
+        finca: formData.finca,
+        zona: formData.zona,
+        tolva: formData.tolva,
         fecha_compra: formData.fecha_compra,
         fecha_instalacion: formData.fecha_instalacion,
         voltaje_nominal: parseFloat(formData.voltaje_nominal),
-        capacidad_kwh: parseFloat(formData.capacidad_kwh),
+        amperios: parseFloat(formData.amperios),
         estado: 'ACTIVA',
       })
 
@@ -216,6 +222,52 @@ export default function CreateBatteryPage() {
               </div>
             </div>
 
+            {/* Row 2b: Finca, Zona, Tolva */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Finca *
+                </label>
+                <input
+                  type="text"
+                  name="finca"
+                  value={formData.finca}
+                  onChange={handleInputChange}
+                  className="input w-full"
+                  placeholder="ej: Finca Principal"
+                  disabled={submitting}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Zona *
+                </label>
+                <input
+                  type="text"
+                  name="zona"
+                  value={formData.zona}
+                  onChange={handleInputChange}
+                  className="input w-full"
+                  placeholder="ej: Zona A"
+                  disabled={submitting}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Tolva *
+                </label>
+                <input
+                  type="text"
+                  name="tolva"
+                  value={formData.tolva}
+                  onChange={handleInputChange}
+                  className="input w-full"
+                  placeholder="ej: Tolva 1"
+                  disabled={submitting}
+                />
+              </div>
+            </div>
+
             {/* Row 3 */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -250,7 +302,7 @@ export default function CreateBatteryPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Voltaje Nominal (V) *
+                  Voltios *
                 </label>
                 <input
                   type="number"
@@ -266,15 +318,15 @@ export default function CreateBatteryPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Capacidad (kWh) *
+                  Amperios (A) *
                 </label>
                 <input
                   type="number"
-                  name="capacidad_kwh"
-                  value={formData.capacidad_kwh}
+                  name="amperios"
+                  value={formData.amperios}
                   onChange={handleInputChange}
                   className="input w-full"
-                  placeholder="ej: 10.5"
+                  placeholder="ej: 100"
                   step="0.1"
                   min="0"
                   disabled={submitting}

@@ -68,6 +68,9 @@ export const batteryQueries = {
         lote,
         proveedor_id,
         piscina_id,
+        finca,
+        zona,
+        tolva,
         piscinas!inner (
           id,
           nombre,
@@ -80,7 +83,8 @@ export const batteryQueries = {
         fecha_compra,
         fecha_instalacion,
         voltaje_nominal,
-        capacidad_kwh,
+        amperios,
+        capacidad_kwh_legacy,
         estado,
         created_at,
         updated_at
@@ -101,6 +105,9 @@ export const batteryQueries = {
         lote,
         proveedor_id,
         piscina_id,
+        finca,
+        zona,
+        tolva,
         piscinas!inner (
           id,
           nombre,
@@ -113,7 +120,8 @@ export const batteryQueries = {
         fecha_compra,
         fecha_instalacion,
         voltaje_nominal,
-        capacidad_kwh,
+        amperios,
+        capacidad_kwh_legacy,
         estado,
         created_at,
         updated_at
