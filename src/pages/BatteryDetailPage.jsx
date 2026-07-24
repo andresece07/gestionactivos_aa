@@ -555,9 +555,9 @@ export default function BatteryDetailPage() {
         {/* Información Técnica */}
         <div className="card mb-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-bold text-red-600 flex items-center gap-2">
+            <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
               <Info className="h-5 w-5" />
-              *** INFORMACIÓN TÉCNICA - PRUEBA ***
+              Información Técnica
             </h3>
             <button
               onClick={() => setShowTechForm(!showTechForm)}
