@@ -9,6 +9,9 @@ ALTER TABLE baterias ADD COLUMN IF NOT EXISTS sector VARCHAR(255);
 -- Agregar campo tolva (ubicación específica donde está la batería)
 ALTER TABLE baterias ADD COLUMN IF NOT EXISTS tolva VARCHAR(255);
 
+-- Agregar campo amperaje
+ALTER TABLE baterias ADD COLUMN IF NOT EXISTS amperaje DECIMAL(10, 2);
+
 -- Crear índices para búsquedas
 CREATE INDEX IF NOT EXISTS idx_baterias_finca ON baterias(finca);
 CREATE INDEX IF NOT EXISTS idx_baterias_sector ON baterias(sector);

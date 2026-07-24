@@ -39,6 +39,7 @@ export default function BatteryDetailPage() {
     finca: '',
     sector: '',
     tolva: '',
+    amperaje: '',
   })
   const [formData, setFormData] = useState({
     piscina_id: '',
@@ -263,6 +264,7 @@ export default function BatteryDetailPage() {
         finca: battery.finca || '',
         sector: battery.sector || '',
         tolva: battery.tolva || '',
+        amperaje: battery.amperaje || '',
       })
     }
   }, [battery])
@@ -568,7 +570,7 @@ export default function BatteryDetailPage() {
 
           {!showTechForm ? (
             <div className="space-y-4">
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div>
                   <p className="text-xs text-slate-500 font-medium">Finca</p>
                   <p className="text-slate-900 font-semibold">{battery.finca || '—'}</p>
@@ -580,6 +582,10 @@ export default function BatteryDetailPage() {
                 <div>
                   <p className="text-xs text-slate-500 font-medium">Tolva</p>
                   <p className="text-slate-900">{battery.tolva || '—'}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-500 font-medium">Amperaje</p>
+                  <p className="text-slate-900">{battery.amperaje ? `${battery.amperaje} A` : '—'}</p>
                 </div>
               </div>
 
@@ -608,7 +614,7 @@ export default function BatteryDetailPage() {
             </div>
           ) : (
             <form onSubmit={handleSaveTechInfo} className="space-y-4">
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Finca</label>
                   <input
@@ -637,6 +643,17 @@ export default function BatteryDetailPage() {
                     onChange={(e) => setTechForm({ ...techForm, tolva: e.target.value })}
                     className="input w-full text-sm"
                     placeholder="Tolva"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Amperaje (A)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={techForm.amperaje}
+                    onChange={(e) => setTechForm({ ...techForm, amperaje: e.target.value })}
+                    className="input w-full text-sm"
+                    placeholder="Ej: 100.50"
                   />
                 </div>
               </div>
