@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
-import { ArrowLeft, MessageSquare, Info, History, Plus, QrCode, Edit2, Trash2, Calendar, Download } from 'lucide-react'
+import { ArrowLeft, MessageSquare, Info, History, Plus, QrCode, Edit2, Trash2, Calendar, Download, Truck } from 'lucide-react'
 import * as XLSX from 'xlsx'
-import { batteryQueries, commentQueries, movimientosQueries, poolQueries } from '../lib/supabaseClient'
+import { batteryQueries, commentQueries, movimientosQueries, poolQueries, supplierQueries, supabase } from '../lib/supabaseClient'
 import { Loading } from '../components/Loading'
 import { ErrorPage } from '../components/Error'
 import { ErrorAlert } from '../components/Error'
@@ -15,6 +15,7 @@ export default function BatteryDetailPage() {
   const [comments, setComments] = useState([])
   const [movimientos, setMovimientos] = useState([])
   const [pools, setPools] = useState([])
+  const [suppliers, setSuppliers] = useState([])
   const [cycles, setCycles] = useState(null)
   const [capacity, setCapacity] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -22,6 +23,14 @@ export default function BatteryDetailPage() {
   const [commentText, setCommentText] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [showMovimientoForm, setShowMovimientoForm] = useState(false)
+  const [showSupplierForm, setShowSupplierForm] = useState(false)
+  const [supplierForm, setSupplierForm] = useState({
+    nombre: '',
+    contacto: '',
+    email: '',
+    telefono: '',
+    direccion: '',
+  })
   const [formData, setFormData] = useState({
     piscina_id: '',
     tolva: '',
@@ -75,6 +84,12 @@ export default function BatteryDetailPage() {
       const { data: poolsData, error: poolsError } = await poolQueries.getAll()
       if (!poolsError) {
         setPools(poolsData || [])
+      }
+
+      // Cargar proveedores
+      const { data: suppliersData, error: suppliersError } = await supplierQueries.getAll()
+      if (!suppliersError) {
+        setSuppliers(suppliersData || [])
       }
     } catch (err) {
       setError(err.message || 'Error cargando batería')
@@ -160,6 +175,56 @@ export default function BatteryDetailPage() {
       setMovimientos(movimientos.filter(m => m.id !== movId))
     } catch (err) {
       setError(err.message || 'Error al eliminar movimiento')
+    }
+  }
+
+  const handleUpdateSupplier = async (supplierId) => {
+    try {
+      setSubmitting(true)
+      const { error } = await supabase
+        .from('baterias')
+        .update({ proveedor_id: supplierId })
+        .eq('id', id)
+
+      if (error) throw error
+
+      setBattery({ ...battery, proveedor_id: supplierId })
+      setError(null)
+    } catch (err) {
+      setError(err.message || 'Error al cambiar proveedor')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const handleCreateSupplier = async (e) => {
+    e.preventDefault()
+    if (!supplierForm.nombre) {
+      setError('El nombre del proveedor es obligatorio')
+      return
+    }
+
+    try {
+      setSubmitting(true)
+      const { data, error: supplierError } = await supplierQueries.create(supplierForm)
+      if (supplierError) throw supplierError
+
+      setSuppliers([...suppliers, data[0]])
+      setSupplierForm({
+        nombre: '',
+        contacto: '',
+        email: '',
+        telefono: '',
+        direccion: '',
+      })
+      setShowSupplierForm(false)
+
+      // Asignar el proveedor creado a la batería
+      await handleUpdateSupplier(data[0].id)
+    } catch (err) {
+      setError(err.message || 'Error al crear proveedor')
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -310,6 +375,140 @@ export default function BatteryDetailPage() {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Proveedores */}
+        <div className="card mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+              <Truck className="h-5 w-5" />
+              Proveedor
+            </h3>
+            <button
+              onClick={() => setShowSupplierForm(!showSupplierForm)}
+              className="btn-secondary flex items-center gap-2 text-sm"
+            >
+              <Plus className="h-4 w-4" />
+              {battery.proveedor_id ? 'Cambiar' : 'Asignar'} Proveedor
+            </button>
+          </div>
+
+          {/* Proveedor Actual */}
+          {battery.proveedores && (
+            <div className="bg-slate-50 rounded-lg p-4 mb-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <div>
+                  <p className="text-xs text-slate-500 font-medium">Nombre</p>
+                  <p className="text-slate-900 font-semibold">{battery.proveedores.nombre}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-500 font-medium">Contacto</p>
+                  <p className="text-slate-900">{battery.proveedores.contacto || '—'}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-500 font-medium">Email</p>
+                  <p className="text-slate-900 text-sm">{battery.proveedores.email || '—'}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-500 font-medium">Teléfono</p>
+                  <p className="text-slate-900">{battery.proveedores.telefono || '—'}</p>
+                </div>
+                <div className="md:col-span-2">
+                  <p className="text-xs text-slate-500 font-medium">Dirección</p>
+                  <p className="text-slate-900">{battery.proveedores.direccion || '—'}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {!battery.proveedor_id && (
+            <div className="p-4 bg-slate-50 rounded-lg border border-slate-200 text-sm text-slate-600 mb-4">
+              Sin proveedor asignado
+            </div>
+          )}
+
+          {/* Formulario Cambiar/Asignar Proveedor */}
+          {showSupplierForm && (
+            <div className="space-y-4 pb-4 border-b border-slate-200 mb-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Seleccionar Proveedor Existente</label>
+                <select
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      handleUpdateSupplier(e.target.value)
+                    }
+                  }}
+                  className="input w-full"
+                  defaultValue=""
+                >
+                  <option value="">Elige un proveedor...</option>
+                  {suppliers.map(supplier => (
+                    <option key={supplier.id} value={supplier.id}>
+                      {supplier.nombre}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="border-t border-slate-200 pt-4">
+                <p className="text-sm font-medium text-slate-700 mb-3">O crear nuevo proveedor:</p>
+                <form onSubmit={handleCreateSupplier} className="space-y-3">
+                  <input
+                    type="text"
+                    placeholder="Nombre del proveedor *"
+                    value={supplierForm.nombre}
+                    onChange={(e) => setSupplierForm({ ...supplierForm, nombre: e.target.value })}
+                    className="input w-full text-sm"
+                    required
+                  />
+                  <input
+                    type="text"
+                    placeholder="Contacto"
+                    value={supplierForm.contacto}
+                    onChange={(e) => setSupplierForm({ ...supplierForm, contacto: e.target.value })}
+                    className="input w-full text-sm"
+                  />
+                  <input
+                    type="email"
+                    placeholder="Email"
+                    value={supplierForm.email}
+                    onChange={(e) => setSupplierForm({ ...supplierForm, email: e.target.value })}
+                    className="input w-full text-sm"
+                  />
+                  <input
+                    type="tel"
+                    placeholder="Teléfono"
+                    value={supplierForm.telefono}
+                    onChange={(e) => setSupplierForm({ ...supplierForm, telefono: e.target.value })}
+                    className="input w-full text-sm"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Dirección"
+                    value={supplierForm.direccion}
+                    onChange={(e) => setSupplierForm({ ...supplierForm, direccion: e.target.value })}
+                    className="input w-full text-sm"
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      type="submit"
+                      disabled={submitting}
+                      className="btn-primary flex-1 text-sm"
+                    >
+                      {submitting ? 'Guardando...' : 'Crear y Asignar'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowSupplierForm(false)}
+                      className="btn-secondary text-sm"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Historial de Movimientos */}
