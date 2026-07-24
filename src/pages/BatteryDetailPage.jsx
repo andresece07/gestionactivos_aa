@@ -553,6 +553,11 @@ export default function BatteryDetailPage() {
           )}
         </div>
 
+        {/* TEST */}
+        <div className="card mb-6 border-4 border-red-500 bg-red-100">
+          <p className="text-red-900 font-bold">✓ INFORMACIÓN TÉCNICA CARGADA - TEST 2026-07-24</p>
+        </div>
+
         {/* Información Técnica */}
         <div className="card mb-6">
           <div className="flex items-center justify-between mb-4">
