@@ -41,7 +41,7 @@ export default function ModulesPage() {
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-slate-900 mb-2">
-            Sistema de Gestión de Activos
+            Sistema de Gestión de Activos - V2
           </h1>
           <p className="text-lg text-slate-600">
             Gestión de Baterías Fotovoltaicas en Acuacultura
