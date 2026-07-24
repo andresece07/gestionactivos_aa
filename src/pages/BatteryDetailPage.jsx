@@ -24,12 +24,21 @@ export default function BatteryDetailPage() {
   const [submitting, setSubmitting] = useState(false)
   const [showMovimientoForm, setShowMovimientoForm] = useState(false)
   const [showSupplierForm, setShowSupplierForm] = useState(false)
+  const [showTechForm, setShowTechForm] = useState(false)
   const [supplierForm, setSupplierForm] = useState({
     nombre: '',
     contacto: '',
     email: '',
     telefono: '',
     direccion: '',
+  })
+  const [techForm, setTechForm] = useState({
+    observaciones: '',
+    imagen_url: '',
+    tecnico_nombre: '',
+    finca: '',
+    sector: '',
+    tolva: '',
   })
   const [formData, setFormData] = useState({
     piscina_id: '',
@@ -227,6 +236,36 @@ export default function BatteryDetailPage() {
       setSubmitting(false)
     }
   }
+
+  const handleSaveTechInfo = async (e) => {
+    e.preventDefault()
+    try {
+      setSubmitting(true)
+      const { data, error: updateError } = await batteryQueries.update(id, techForm)
+      if (updateError) throw updateError
+
+      setBattery({ ...battery, ...techForm })
+      setShowTechForm(false)
+      setError(null)
+    } catch (err) {
+      setError(err.message || 'Error al guardar información técnica')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  useEffect(() => {
+    if (battery) {
+      setTechForm({
+        observaciones: battery.observaciones || '',
+        imagen_url: battery.imagen_url || '',
+        tecnico_nombre: battery.tecnico_nombre || '',
+        finca: battery.finca || '',
+        sector: battery.sector || '',
+        tolva: battery.tolva || '',
+      })
+    }
+  }, [battery])
 
   const handleExportExcel = () => {
     if (movimientos.length === 0) {
@@ -508,6 +547,150 @@ export default function BatteryDetailPage() {
                 </form>
               </div>
             </div>
+          )}
+        </div>
+
+        {/* Información Técnica */}
+        <div className="card mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+              <Info className="h-5 w-5" />
+              Información Técnica
+            </h3>
+            <button
+              onClick={() => setShowTechForm(!showTechForm)}
+              className="btn-secondary flex items-center gap-2 text-sm"
+            >
+              <Edit2 className="h-4 w-4" />
+              {showTechForm ? 'Cancelar' : 'Editar'}
+            </button>
+          </div>
+
+          {!showTechForm ? (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <div>
+                  <p className="text-xs text-slate-500 font-medium">Finca</p>
+                  <p className="text-slate-900 font-semibold">{battery.finca || '—'}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-500 font-medium">Sector</p>
+                  <p className="text-slate-900">{battery.sector || '—'}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-500 font-medium">Tolva</p>
+                  <p className="text-slate-900">{battery.tolva || '—'}</p>
+                </div>
+              </div>
+
+              <div className="border-t border-slate-200 pt-4">
+                <div>
+                  <p className="text-xs text-slate-500 font-medium mb-2">Técnico Responsable</p>
+                  <p className="text-slate-900">{battery.tecnico_nombre || '—'}</p>
+                </div>
+              </div>
+
+              {battery.imagen_url && (
+                <div className="border-t border-slate-200 pt-4">
+                  <p className="text-xs text-slate-500 font-medium mb-2">Imagen</p>
+                  <a href={battery.imagen_url} target="_blank" rel="noopener noreferrer" className="text-primary-600 hover:underline text-sm">
+                    Ver imagen
+                  </a>
+                </div>
+              )}
+
+              {battery.observaciones && (
+                <div className="border-t border-slate-200 pt-4">
+                  <p className="text-xs text-slate-500 font-medium mb-2">Observaciones</p>
+                  <p className="text-slate-900 text-sm whitespace-pre-wrap">{battery.observaciones}</p>
+                </div>
+              )}
+            </div>
+          ) : (
+            <form onSubmit={handleSaveTechInfo} className="space-y-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Finca</label>
+                  <input
+                    type="text"
+                    value={techForm.finca}
+                    onChange={(e) => setTechForm({ ...techForm, finca: e.target.value })}
+                    className="input w-full text-sm"
+                    placeholder="Nombre de la finca"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Sector</label>
+                  <input
+                    type="text"
+                    value={techForm.sector}
+                    onChange={(e) => setTechForm({ ...techForm, sector: e.target.value })}
+                    className="input w-full text-sm"
+                    placeholder="Sector"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Tolva</label>
+                  <input
+                    type="text"
+                    value={techForm.tolva}
+                    onChange={(e) => setTechForm({ ...techForm, tolva: e.target.value })}
+                    className="input w-full text-sm"
+                    placeholder="Tolva"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Técnico Responsable</label>
+                <input
+                  type="text"
+                  value={techForm.tecnico_nombre}
+                  onChange={(e) => setTechForm({ ...techForm, tecnico_nombre: e.target.value })}
+                  className="input w-full text-sm"
+                  placeholder="Nombre del técnico"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">URL de Imagen</label>
+                <input
+                  type="url"
+                  value={techForm.imagen_url}
+                  onChange={(e) => setTechForm({ ...techForm, imagen_url: e.target.value })}
+                  className="input w-full text-sm"
+                  placeholder="https://ejemplo.com/imagen.jpg"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Observaciones</label>
+                <textarea
+                  value={techForm.observaciones}
+                  onChange={(e) => setTechForm({ ...techForm, observaciones: e.target.value })}
+                  className="input w-full text-sm"
+                  placeholder="Notas técnicas"
+                  rows="4"
+                />
+              </div>
+
+              <div className="flex gap-2 border-t border-slate-200 pt-4">
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="btn-primary flex-1 text-sm"
+                >
+                  {submitting ? 'Guardando...' : 'Guardar Cambios'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowTechForm(false)}
+                  className="btn-secondary text-sm"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </form>
           )}
         </div>
 
