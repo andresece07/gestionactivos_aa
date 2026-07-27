@@ -20,13 +20,6 @@ export default function ModulesPage() {
       color: 'text-yellow-600'
     },
     {
-      icon: Truck,
-      title: 'Proveedores',
-      description: 'Gestión de suministros',
-      path: '/proveedores',
-      color: 'text-orange-600'
-    },
-    {
       icon: Calendar,
       title: 'Cronograma',
       description: 'Personal y horarios',

@@ -9,7 +9,6 @@ import BatteriesPage from './pages/BatteriesPage'
 import BatteryDetailPage from './pages/BatteryDetailPage'
 import CreateBatteryPage from './pages/CreateBatteryPage'
 import CronogramaPage from './pages/CronogramaPage'
-import ProvidersPage from './pages/ProvidersPage'
 import QRScannerPage from './pages/QRScannerPage'
 
 const ProtectedRoute = ({ children }) => {
@@ -89,14 +88,6 @@ export default function App() {
           element={
             <ProtectedRoute>
               <CronogramaPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/proveedores"
-          element={
-            <ProtectedRoute>
-              <ProvidersPage />
             </ProtectedRoute>
           }
         />
