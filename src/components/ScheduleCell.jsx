@@ -28,6 +28,7 @@ export const ScheduleCell = memo(({
   onMouseUp,
   onClick,
   disabled = false,
+  consecutiveDays = 0,
 }) => {
   const dateStr = date.toISOString().split('T')[0]
   const estado = record?.estado || 'PROGRAMADO'
@@ -37,7 +38,7 @@ export const ScheduleCell = memo(({
 
   return (
     <td
-      className={`px-2 py-3 text-center cursor-pointer border border-slate-200 text-xs font-semibold transition hover:opacity-80 hover:shadow-sm ${
+      className={`px-2 py-3 text-center cursor-pointer border border-slate-200 transition hover:opacity-80 hover:shadow-sm relative ${
         isSelected ? 'ring-2 ring-primary-500 ring-inset' : ''
       } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
       style={{
@@ -51,7 +52,12 @@ export const ScheduleCell = memo(({
       title={`${estado}${disabled ? ' (bloqueado)' : ' - Click para alternar'}` }
       data-testid={`schedule-cell-${employeeId}-${dateStr}`}
     >
-      {label}
+      <div className="text-xs font-semibold">{label}</div>
+      {consecutiveDays > 0 && estado === 'TURNO' && (
+        <div className="text-xs font-bold text-white bg-slate-800 rounded-full w-5 h-5 flex items-center justify-center mx-auto mt-0.5">
+          {consecutiveDays}
+        </div>
+      )}
     </td>
   )
 })

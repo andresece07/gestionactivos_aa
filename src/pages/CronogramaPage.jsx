@@ -109,6 +109,41 @@ export default function CronogramaPage() {
     return dates
   }
 
+  const getConsecutiveDays = (employeeId, date, dates) => {
+    const dateStr = date.toISOString().split('T')[0]
+    const currentIndex = dates.findIndex(d => d.toISOString().split('T')[0] === dateStr)
+
+    if (currentIndex === -1) return 0
+
+    const currentRecord = scheduleData[`${employeeId}-${dateStr}`]
+    if (!currentRecord || currentRecord.estado !== 'TURNO') return 0
+
+    let count = 1
+    let lookAhead = currentIndex + 1
+
+    while (lookAhead < dates.length) {
+      const nextDateStr = dates[lookAhead].toISOString().split('T')[0]
+      const nextRecord = scheduleData[`${employeeId}-${nextDateStr}`]
+
+      if (nextRecord && nextRecord.estado === 'TURNO') {
+        count++
+        lookAhead++
+      } else {
+        break
+      }
+    }
+
+    return Math.min(count, 6)
+  }
+
+  const getAvailablePersonnel = (date, dates) => {
+    const dateStr = date.toISOString().split('T')[0]
+    return employees.filter(emp => {
+      const record = scheduleData[`${emp.id}-${dateStr}`]
+      return record && record.estado === 'TURNO'
+    }).length
+  }
+
 
   const handleCellClick = (employeeId, date) => {
     if (grid.isSelecting) return
@@ -346,6 +381,7 @@ export default function CronogramaPage() {
                       const key = `${emp.id}-${dateStr}`
                       const record = scheduleData[key]
                       const isSelected = grid.selectedDates.includes(dateStr) && grid.selectedEmployee === emp.id
+                      const consecutiveDays = getConsecutiveDays(emp.id, date, dates)
 
                       return (
                         <ScheduleCell
@@ -358,11 +394,28 @@ export default function CronogramaPage() {
                           onMouseEnter={grid.handleCellMouseEnter}
                           onMouseUp={grid.handleCellMouseUp}
                           onClick={handleCellClick}
+                          consecutiveDays={consecutiveDays}
                         />
                       )
                     })}
                   </tr>
                 ))}
+                {/* Fila de Personal Disponible */}
+                <tr className="bg-primary-50 border-t-2 border-primary-300 font-bold">
+                  <td
+                    className="px-4 py-3 font-bold text-primary-900 sticky left-0 z-10 border-r-2 border-primary-300 bg-primary-50"
+                  >
+                    <div>Personal Disponible</div>
+                  </td>
+                  {dates.map(date => (
+                    <td
+                      key={date.toISOString()}
+                      className="px-2 py-3 text-center border border-primary-200 bg-primary-50 text-primary-900 font-bold"
+                    >
+                      {getAvailablePersonnel(date, dates)}
+                    </td>
+                  ))}
+                </tr>
               </tbody>
             </table>
           </div>
