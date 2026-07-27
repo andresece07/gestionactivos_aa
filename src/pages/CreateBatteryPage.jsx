@@ -1,14 +1,13 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Plus } from 'lucide-react'
-import { batteryQueries, poolQueries, supplierQueries } from '../lib/supabaseClient'
+import { batteryQueries, poolQueries, supabase } from '../lib/supabaseClient'
 import { Loading } from '../components/Loading'
 import { ErrorAlert } from '../components/Error'
 
 export default function CreateBatteryPage() {
   const navigate = useNavigate()
   const [pools, setPools] = useState([])
-  const [suppliers, setSuppliers] = useState([])
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState(null)
@@ -16,7 +15,7 @@ export default function CreateBatteryPage() {
     sku_dynamics: '',
     codigo_unico: '',
     lote: '',
-    proveedor_id: '',
+    proveedor_nombre: '',
     piscina_id: '',
     finca: '',
     zona: '',
@@ -27,7 +26,6 @@ export default function CreateBatteryPage() {
     amperios: '',
   })
 
-  // Cargar piscinas
   useEffect(() => {
     loadPools()
   }, [])
@@ -35,18 +33,43 @@ export default function CreateBatteryPage() {
   const loadPools = async () => {
     try {
       setLoading(true)
-      const [poolsRes, suppliersRes] = await Promise.all([
-        poolQueries.getAll(),
-        supplierQueries.getAll(),
-      ])
+      const poolsRes = await poolQueries.getAll()
       if (poolsRes.error) throw poolsRes.error
-      if (suppliersRes.error) throw suppliersRes.error
       setPools(poolsRes.data || [])
-      setSuppliers(suppliersRes.data || [])
     } catch (err) {
       setError(err.message || 'Error cargando datos')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const getOrCreateProvider = async (proveedorNombre) => {
+    if (!proveedorNombre.trim()) return null
+
+    try {
+      const { data: existing } = await supabase
+        .from('proveedores')
+        .select('id')
+        .eq('nombre', proveedorNombre.trim())
+        .single()
+
+      if (existing) {
+        return existing.id
+      }
+
+      const { data: newProvider, error: createError } = await supabase
+        .from('proveedores')
+        .insert([{
+          nombre: proveedorNombre.trim(),
+          activo: true,
+        }])
+        .select('id')
+        .single()
+
+      if (createError) throw createError
+      return newProvider?.id
+    } catch (err) {
+      throw new Error(`Error al crear/obtener proveedor: ${err.message}`)
     }
   }
 
@@ -74,11 +97,16 @@ export default function CreateBatteryPage() {
     try {
       setSubmitting(true)
 
+      let proveedorId = null
+      if (formData.proveedor_nombre) {
+        proveedorId = await getOrCreateProvider(formData.proveedor_nombre)
+      }
+
       const { data: newBattery, error: createError } = await batteryQueries.create({
         sku_dynamics: formData.sku_dynamics,
         codigo_unico: formData.codigo_unico,
         lote: formData.lote || null,
-        proveedor_id: formData.proveedor_id || null,
+        proveedor_id: proveedorId,
         piscina_id: formData.piscina_id,
         finca: formData.finca,
         zona: formData.zona,
@@ -186,20 +214,15 @@ export default function CreateBatteryPage() {
                 <label className="block text-sm font-medium text-slate-700 mb-1">
                   Proveedor
                 </label>
-                <select
-                  name="proveedor_id"
-                  value={formData.proveedor_id}
+                <input
+                  type="text"
+                  name="proveedor_nombre"
+                  value={formData.proveedor_nombre}
                   onChange={handleInputChange}
                   className="input w-full"
+                  placeholder="Ej: Proveedor X (se crea si no existe)"
                   disabled={submitting}
-                >
-                  <option value="">Selecciona un proveedor</option>
-                  {suppliers.map(supplier => (
-                    <option key={supplier.id} value={supplier.id}>
-                      {supplier.nombre}
-                    </option>
-                  ))}
-                </select>
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
