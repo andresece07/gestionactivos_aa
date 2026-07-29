@@ -157,6 +157,43 @@ export const batteryQueries = {
 
     return { data, error }
   },
+
+  // Calcular días desde instalación
+  calculateDaysFromInstallation: async (batteryId) => {
+    const { data, error } = await supabase
+      .rpc('calcular_dias_desde_instalacion', { bateria_id: batteryId })
+
+    return { data, error }
+  },
+
+  // Obtener estado de vida útil
+  getLifeUtilStatus: async (batteryId) => {
+    const { data, error } = await supabase
+      .rpc('obtener_estado_vida_util', { bateria_id: batteryId })
+
+    return { data, error }
+  },
+
+  // Obtener todas las baterías con vida útil cumplida (para reporte)
+  getWithLifeUtilExpired: async () => {
+    const { data, error } = await supabase
+      .from('vw_baterias_vida_util_cumplida')
+      .select('*')
+      .order('dias_desde_instalacion', { ascending: false })
+
+    return { data, error }
+  },
+
+  // Actualizar estado de una batería
+  update: async (id, updates) => {
+    const { data, error } = await supabase
+      .from('baterias')
+      .update(updates)
+      .eq('id', id)
+      .select()
+
+    return { data, error }
+  },
 }
 
 // Funciones para paros de piscina

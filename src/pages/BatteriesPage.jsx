@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Battery, Plus, Search, Eye } from 'lucide-react'
+import { Battery, Plus, Search, Eye, AlertCircle } from 'lucide-react'
 import { batteryQueries } from '../lib/supabaseClient'
 import { Loading } from '../components/Loading'
 import { ErrorAlert } from '../components/Error'
@@ -10,7 +10,8 @@ export default function BatteriesPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
-  const [cyclesCache, setCyclesCache] = useState({})
+  const [daysCache, setDaysCache] = useState({})
+  const [lifeUtilCache, setLifeUtilCache] = useState({})
 
   useEffect(() => {
     loadBatteries()
@@ -25,9 +26,9 @@ export default function BatteriesPage() {
       if (fetchError) throw fetchError
       setBatteries(data || [])
 
-      // Precargar ciclos
+      // Precargar días e información de vida útil
       if (data) {
-        loadCycles(data)
+        loadDays(data)
       }
     } catch (err) {
       setError(err.message || 'Error cargando baterías')
@@ -36,13 +37,17 @@ export default function BatteriesPage() {
     }
   }
 
-  const loadCycles = async (bats) => {
-    const cycles = {}
+  const loadDays = async (bats) => {
+    const days = {}
+    const lifeUtil = {}
     for (const battery of bats) {
-      const { data } = await batteryQueries.calculateCycles(battery.id)
-      cycles[battery.id] = data || 0
+      const { data: daysData } = await batteryQueries.calculateDaysFromInstallation(battery.id)
+      const { data: lifeData } = await batteryQueries.getLifeUtilStatus(battery.id)
+      days[battery.id] = daysData || 0
+      lifeUtil[battery.id] = lifeData
     }
-    setCyclesCache(cycles)
+    setDaysCache(days)
+    setLifeUtilCache(lifeUtil)
   }
 
   if (loading) {
@@ -69,10 +74,16 @@ export default function BatteriesPage() {
               Gestión centralizada de baterías fotovoltaicas
             </p>
           </div>
-          <Link to="/baterias/nueva" className="btn-primary flex items-center gap-2">
-            <Plus className="h-4 w-4" />
-            Nueva Batería
-          </Link>
+          <div className="flex gap-2">
+            <Link to="/baterias/reporte-vida-util" className="btn-secondary flex items-center gap-2">
+              <AlertCircle className="h-4 w-4" />
+              Reporte Vida Útil
+            </Link>
+            <Link to="/baterias/nueva" className="btn-primary flex items-center gap-2">
+              <Plus className="h-4 w-4" />
+              Nueva Batería
+            </Link>
+          </div>
         </div>
 
         {error && (
@@ -103,12 +114,12 @@ export default function BatteriesPage() {
                 <tr className="bg-slate-50">
                   <th>Código Único</th>
                   <th>SKU Dynamics</th>
-                  <th>Finca</th>
                   <th>Piscina</th>
                   <th>Voltios</th>
                   <th>Amperios</th>
+                  <th>Días Instalación</th>
+                  <th>Vida Útil</th>
                   <th>Estado</th>
-                  <th>Fecha Instalación</th>
                   <th>Acciones</th>
                 </tr>
               </thead>
@@ -117,17 +128,23 @@ export default function BatteriesPage() {
                   <tr key={battery.id} className="hover:bg-slate-50">
                     <td className="font-medium text-slate-900">{battery.codigo_unico}</td>
                     <td className="text-slate-600 text-sm">{battery.sku_dynamics}</td>
-                    <td className="text-slate-600 text-sm">{battery.finca || '—'}</td>
                     <td className="text-slate-600">{battery.piscinas.nombre}</td>
                     <td className="text-slate-900">{battery.voltaje_nominal}V</td>
                     <td className="text-slate-900">{battery.amperios}A</td>
+                    <td className="text-slate-600 text-sm">
+                      {daysCache[battery.id] !== undefined
+                        ? `${daysCache[battery.id]} días`
+                        : '—'}
+                    </td>
+                    <td>
+                      <span className={`badge ${lifeUtilCache[battery.id] === 'ACTIVA' ? 'badge-success' : 'badge-danger'}`}>
+                        {lifeUtilCache[battery.id] === 'ACTIVA' ? 'Activa' : 'Cumplida'}
+                      </span>
+                    </td>
                     <td>
                       <span className={`badge ${battery.estado === 'ACTIVA' ? 'badge-success' : 'badge-danger'}`}>
                         {battery.estado}
                       </span>
-                    </td>
-                    <td className="text-slate-600 text-sm">
-                      {new Date(battery.fecha_instalacion).toLocaleDateString()}
                     </td>
                     <td>
                       <Link
@@ -159,8 +176,9 @@ export default function BatteriesPage() {
         {/* Info */}
         <div className="mt-6 bg-primary-50 border border-primary-200 rounded-lg p-4">
           <p className="text-sm text-primary-900">
-            <strong>Nota:</strong> Total de baterías registradas: <strong>{batteries.length}</strong>
-            {' '} | Baterías activas: <strong>{batteries.filter(b => b.estado === 'ACTIVA').length}</strong>
+            <strong>Resumen:</strong> Total: <strong>{batteries.length}</strong>
+            {' '} | Activas: <strong>{batteries.filter(b => b.estado === 'ACTIVA').length}</strong>
+            {' '} | Vida útil cumplida: <strong>{Object.values(lifeUtilCache).filter(s => s === 'VIDA_UTIL_CUMPLIDA').length}</strong>
           </p>
         </div>
       </div>

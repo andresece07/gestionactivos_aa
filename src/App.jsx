@@ -8,6 +8,7 @@ import DashboardPage from './pages/DashboardPage'
 import BatteriesPage from './pages/BatteriesPage'
 import BatteryDetailPage from './pages/BatteryDetailPage'
 import CreateBatteryPage from './pages/CreateBatteryPage'
+import BatteryLifeUtilReportPage from './pages/BatteryLifeUtilReportPage'
 import CronogramaPage from './pages/CronogramaPage'
 import QRScannerPage from './pages/QRScannerPage'
 
@@ -80,6 +81,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <BatteryDetailPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/baterias/reporte-vida-util"
+          element={
+            <ProtectedRoute>
+              <BatteryLifeUtilReportPage />
             </ProtectedRoute>
           }
         />

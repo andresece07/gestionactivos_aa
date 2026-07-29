@@ -16,8 +16,9 @@ export default function BatteryDetailPage() {
   const [movimientos, setMovimientos] = useState([])
   const [pools, setPools] = useState([])
   const [suppliers, setSuppliers] = useState([])
-  const [cycles, setCycles] = useState(null)
+  const [daysFromInstallation, setDaysFromInstallation] = useState(null)
   const [capacity, setCapacity] = useState(null)
+  const [lifeUtilStatus, setLifeUtilStatus] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [commentText, setCommentText] = useState('')
@@ -71,12 +72,14 @@ export default function BatteryDetailPage() {
       setBattery(batteryData)
       setFormData(prev => ({ ...prev, piscina_id: batteryData.piscina_id }))
 
-      // Cargar ciclos y capacidad
-      const { data: cyclesData } = await batteryQueries.calculateCycles(id)
+      // Cargar días desde instalación y capacidad
+      const { data: daysData } = await batteryQueries.calculateDaysFromInstallation(id)
       const { data: capacityData } = await batteryQueries.calculateResidualCapacity(id)
+      const { data: lifeStatusData } = await batteryQueries.getLifeUtilStatus(id)
 
-      setCycles(cyclesData)
+      setDaysFromInstallation(daysData)
       setCapacity(capacityData)
+      setLifeUtilStatus(lifeStatusData)
 
       // Cargar comentarios
       const { data: commentsData, error: commentsError } = await commentQueries.getByBattery(id)
@@ -370,8 +373,14 @@ export default function BatteryDetailPage() {
               <p className="text-lg font-bold text-slate-900">{battery.capacidad_kwh} kWh</p>
             </div>
             <div>
-              <p className="text-slate-600 text-sm font-medium">Ciclos Totales</p>
-              <p className="text-lg font-bold text-slate-900">{cycles ?? '—'}</p>
+              <p className="text-slate-600 text-sm font-medium">Días desde Instalación</p>
+              <p className="text-lg font-bold text-slate-900">{daysFromInstallation ?? '—'}</p>
+            </div>
+            <div>
+              <p className="text-slate-600 text-sm font-medium">Estado de Vida Útil</p>
+              <span className={`badge ${lifeUtilStatus === 'ACTIVA' ? 'badge-success' : 'badge-danger'}`}>
+                {lifeUtilStatus === 'ACTIVA' ? 'Activa' : 'Vida Útil Cumplida'}
+              </span>
             </div>
             <div>
               <p className="text-slate-600 text-sm font-medium">Fecha Instalación</p>
@@ -410,9 +419,10 @@ export default function BatteryDetailPage() {
             <div className="bg-primary-50 border border-primary-200 rounded-lg p-4 flex gap-3">
               <Info className="h-5 w-5 text-primary-600 flex-shrink-0 mt-0.5" />
               <div className="text-sm text-primary-900">
-                <p className="font-medium mb-1">Degradación</p>
+                <p className="font-medium mb-1">Estado de Vida Útil</p>
                 <p>
-                  Tasa de degradación: 0.05% por ciclo ({cycles * 0.0005 * 100}.toFixed(2)% acumulado)
+                  Tiempo de operación: {Math.floor((daysFromInstallation || 0) / 365.25)} años y {Math.floor(((daysFromInstallation || 0) % 365.25) / 30)} meses
+                  {lifeUtilStatus === 'VIDA_UTIL_CUMPLIDA' && ' - La batería ha cumplido su tiempo de vida útil (10 años)'}
                 </p>
               </div>
             </div>
