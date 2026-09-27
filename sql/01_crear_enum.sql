@@ -1,0 +1,4 @@
+DO $$ BEGIN
+  CREATE TYPE estado_vida_util AS ENUM ('ACTIVA', 'VIDA_UTIL_CUMPLIDA');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;

@@ -1,0 +1,5 @@
+CREATE OR REPLACE FUNCTION calcular_dias_desde_instalacion(bateria_id uuid) RETURNS integer AS $$ DECLARE dias_totales integer; dias_paros integer; fecha_inst date; piscina_id_var uuid; BEGIN SELECT b.fecha_instalacion, b.piscina_id INTO fecha_inst, piscina_id_var FROM baterias b WHERE b.id = bateria_id; IF fecha_inst IS NULL THEN RETURN 0; END IF; dias_totales := CURRENT_DATE - fecha_inst; IF dias_totales < 0 THEN RETURN 0; END IF; SELECT COALESCE(SUM(fecha_fin - fecha_inicio), 0) INTO dias_paros FROM paros_piscina WHERE piscina_id = piscina_id_var; RETURN GREATEST(0, dias_totales - dias_paros); END; $$ LANGUAGE plpgsql STABLE;
+
+CREATE OR REPLACE FUNCTION verificar_vida_util_cumplida(bateria_id uuid) RETURNS boolean AS $$ BEGIN RETURN calcular_dias_desde_instalacion(bateria_id) >= 3650; END; $$ LANGUAGE plpgsql STABLE;
+
+CREATE OR REPLACE FUNCTION obtener_estado_vida_util(bateria_id uuid) RETURNS estado_vida_util AS $$ BEGIN IF verificar_vida_util_cumplida(bateria_id) THEN RETURN 'VIDA_UTIL_CUMPLIDA'::estado_vida_util; ELSE RETURN 'ACTIVA'::estado_vida_util; END IF; END; $$ LANGUAGE plpgsql STABLE;

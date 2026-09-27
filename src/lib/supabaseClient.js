@@ -1,8 +1,12 @@
 import { createClient } from '@supabase/supabase-js'
 
-// Credenciales Supabase - TEMPORAL (mover a env vars en producción)
-const SUPABASE_URL = 'https://radggsmuvtalwwktljfu.supabase.co'
-const SUPABASE_ANON_KEY = 'sb_publishable_jdyDWIytMLR8SB6-Y-ClkA_95H5onV_'
+// Usar variables de entorno (configuradas en .env o Cloudflare Pages)
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY
+
+if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+  console.error('❌ Missing Supabase environment variables. Check .env file or Cloudflare Pages settings.')
+}
 
 // Crear cliente Supabase
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
