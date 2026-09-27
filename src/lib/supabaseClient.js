@@ -352,6 +352,7 @@ export const supplierQueries = {
 
   // Crear nuevo proveedor
   create: async (supplier) => {
+    const user = await supabaseAuth.getUser()
     const { data, error } = await supabase
       .from('proveedores')
       .insert([{
@@ -361,6 +362,7 @@ export const supplierQueries = {
         telefono: supplier.telefono,
         direccion: supplier.direccion,
         activo: true,
+        created_by: user?.id,
       }])
       .select()
 

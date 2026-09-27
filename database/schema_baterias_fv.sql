@@ -38,6 +38,7 @@ CREATE TABLE proveedores (
   activo boolean DEFAULT true,
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone,
+  created_by uuid REFERENCES auth.users(id) ON DELETE SET NULL,
   CONSTRAINT nombre_no_vacio CHECK (length(trim(nombre)) > 0)
 );
 

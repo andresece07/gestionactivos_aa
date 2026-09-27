@@ -3,20 +3,39 @@
 -- ============================================================================
 
 ALTER TABLE proveedores ENABLE ROW LEVEL SECURITY;
-CREATE POLICY IF NOT EXISTS "proveedores_select_all" ON proveedores FOR SELECT USING (true);
-CREATE POLICY IF NOT EXISTS "proveedores_insert_auth" ON proveedores FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
-CREATE POLICY IF NOT EXISTS "proveedores_update_auth" ON proveedores FOR UPDATE USING (auth.uid() IS NOT NULL);
+
+-- Agregar created_by si no existe
+ALTER TABLE proveedores ADD COLUMN IF NOT EXISTS created_by uuid REFERENCES auth.users(id) ON DELETE SET NULL;
+
+-- Políticas RLS correctas
+DROP POLICY IF EXISTS "proveedores_select_all" ON proveedores;
+DROP POLICY IF EXISTS "proveedores_insert_auth" ON proveedores;
+DROP POLICY IF EXISTS "proveedores_update_auth" ON proveedores;
+
+CREATE POLICY "proveedores_select_all" ON proveedores FOR SELECT USING (true);
+
+CREATE POLICY "proveedores_insert_auth" ON proveedores
+  FOR INSERT WITH CHECK (
+    auth.uid() IS NOT NULL 
+    AND created_by = auth.uid()
+  );
+
+CREATE POLICY "proveedores_update_auth" ON proveedores
+  FOR UPDATE USING (
+    auth.uid() IS NOT NULL 
+    AND (created_by = auth.uid() OR auth.uid() IN (SELECT id FROM auth.users WHERE raw_user_meta_data->>'role' = 'admin'))
+  );
 
 -- ============================================================================
 -- PASO 2: Insertar datos de proveedores
 -- ============================================================================
 
-INSERT INTO proveedores (nombre, persona_contacto, email, telefono, ciudad, pais, activo)
+INSERT INTO proveedores (nombre, contacto, email, telefono, direccion, activo, created_by)
 VALUES
-  ('BatteryTech Solutions', 'Carlos Mendez', 'info@batterytech.com', '+56 9 1234 5678', 'Santiago', 'Chile', true),
-  ('Solar Energy Supplies', 'María López', 'contact@solarsupply.com', '+56 9 2345 6789', 'Concepción', 'Chile', true),
-  ('Renewable Power Corp', 'Juan García', 'sales@renewpower.com', '+56 9 3456 7890', 'Valparaíso', 'Chile', true),
-  ('EcoBattery International', 'Ana Silva', 'support@ecobattery.com', '+56 9 4567 8901', 'Puerto Montt', 'Chile', true)
+  ('BatteryTech Solutions', 'Carlos Mendez', 'info@batterytech.com', '+56 9 1234 5678', 'Santiago, Chile', true, NULL),
+  ('Solar Energy Supplies', 'María López', 'contact@solarsupply.com', '+56 9 2345 6789', 'Concepción, Chile', true, NULL),
+  ('Renewable Power Corp', 'Juan García', 'sales@renewpower.com', '+56 9 3456 7890', 'Valparaíso, Chile', true, NULL),
+  ('EcoBattery International', 'Ana Silva', 'support@ecobattery.com', '+56 9 4567 8901', 'Puerto Montt, Chile', true, NULL)
 ON CONFLICT (nombre) DO NOTHING;
 
 -- ============================================================================

@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS proveedores (
   activo boolean DEFAULT true,
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone,
+  created_by uuid REFERENCES auth.users(id) ON DELETE SET NULL,
   CONSTRAINT nombre_no_vacio CHECK (length(trim(nombre)) > 0)
 );
 
@@ -26,26 +27,40 @@ ADD COLUMN IF NOT EXISTS proveedor_id uuid REFERENCES proveedores(id) ON DELETE 
 -- Crear índice para proveedor_id
 CREATE INDEX IF NOT EXISTS idx_baterias_proveedor ON baterias(proveedor_id);
 
+-- Agregar columna created_by si no existe (migración)
+ALTER TABLE proveedores
+ADD COLUMN IF NOT EXISTS created_by uuid REFERENCES auth.users(id) ON DELETE SET NULL;
+
 -- Habilitar RLS para proveedores
 ALTER TABLE proveedores ENABLE ROW LEVEL SECURITY;
 
 -- Políticas de seguridad para proveedores
-CREATE POLICY IF NOT EXISTS "proveedores_select_all" ON proveedores
+DROP POLICY IF EXISTS "proveedores_select_all" ON proveedores;
+DROP POLICY IF EXISTS "proveedores_insert_auth" ON proveedores;
+DROP POLICY IF EXISTS "proveedores_update_auth" ON proveedores;
+
+CREATE POLICY "proveedores_select_all" ON proveedores
   FOR SELECT USING (true);
 
-CREATE POLICY IF NOT EXISTS "proveedores_insert_auth" ON proveedores
-  FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
+CREATE POLICY "proveedores_insert_auth" ON proveedores
+  FOR INSERT WITH CHECK (
+    auth.uid() IS NOT NULL 
+    AND created_by = auth.uid()
+  );
 
-CREATE POLICY IF NOT EXISTS "proveedores_update_auth" ON proveedores
-  FOR UPDATE USING (auth.uid() IS NOT NULL);
+CREATE POLICY "proveedores_update_auth" ON proveedores
+  FOR UPDATE USING (
+    auth.uid() IS NOT NULL 
+    AND (created_by = auth.uid() OR auth.uid() IN (SELECT id FROM auth.users WHERE raw_user_meta_data->>'role' = 'admin'))
+  );
 
--- Seed data: Agregar algunos proveedores de ejemplo
-INSERT INTO proveedores (nombre, contacto, email)
+-- Seed data: Agregar algunos proveedores de ejemplo (created_by NULL para compatibilidad)
+INSERT INTO proveedores (nombre, contacto, email, direccion, created_by)
 VALUES
-  ('Soluna Energy', 'Juan Carlos García', 'contacto@soluna.com'),
-  ('PowerCell Systems', 'María López Ruiz', 'ventas@powercell.com'),
-  ('EnerTech Solutions', 'Carlos Martínez', 'info@enertech.com'),
-  ('Baterías Renovables SA', 'Ana Silva', 'soporte@baterias-renewables.com')
+  ('Soluna Energy', 'Juan Carlos García', 'contacto@soluna.com', 'Av. Principal 123', NULL),
+  ('PowerCell Systems', 'María López Ruiz', 'ventas@powercell.com', 'Calle Solar 456', NULL),
+  ('EnerTech Solutions', 'Carlos Martínez', 'info@enertech.com', 'Zona Industrial 789', NULL),
+  ('Baterías Renovables SA', 'Ana Silva', 'soporte@baterias-renewables.com', 'Parque Tech 321', NULL)
 ON CONFLICT (nombre) DO NOTHING;
 
 -- ============================================================================
