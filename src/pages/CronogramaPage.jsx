@@ -139,22 +139,20 @@ export default function CronogramaPage() {
     const currentRecord = scheduleData[`${employeeId}-${dateStr}`]
     if (!currentRecord || currentRecord.estado !== 'TURNO') return 0
 
-    let count = 1
-    let lookAhead = currentIndex + 1
-
-    while (lookAhead < dates.length) {
-      const nextDateStr = dates[lookAhead].toISOString().split('T')[0]
-      const nextRecord = scheduleData[`${employeeId}-${nextDateStr}`]
-
-      if (nextRecord && nextRecord.estado === 'TURNO') {
-        count++
-        lookAhead++
+    // Find the start of the consecutive sequence (look backward)
+    let startIndex = currentIndex
+    while (startIndex > 0) {
+      const prevDateStr = dates[startIndex - 1].toISOString().split('T')[0]
+      const prevRecord = scheduleData[`${employeeId}-${prevDateStr}`]
+      if (prevRecord && prevRecord.estado === 'TURNO') {
+        startIndex--
       } else {
         break
       }
     }
 
-    return count
+    // Position within the sequence (1-based from left/start)
+    return currentIndex - startIndex + 1
   }
 
   const getAvailablePersonnel = (date, dates) => {
