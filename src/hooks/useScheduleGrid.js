@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 
 export function useScheduleGrid() {
   const [isSelecting, setIsSelecting] = useState(false)
@@ -10,6 +10,16 @@ export function useScheduleGrid() {
     estado: 'TURNO',
     motivo: '',
   })
+  // Quick edit modal for single cell corrections
+  const [quickEdit, setQuickEdit] = useState(null)
+
+  // Auto-set formData for quick edit (toggle from current state)
+  useEffect(() => {
+    if (quickEdit) {
+      const oppositeState = quickEdit.currentState === 'TURNO' ? 'LIBRE' : 'TURNO'
+      setFormData({ estado: oppositeState, motivo: '' })
+    }
+  }, [quickEdit])
 
   const handleCellMouseDown = (employeeId, date) => {
     if (selectedEmployee && selectedEmployee !== employeeId) return
@@ -44,6 +54,31 @@ export function useScheduleGrid() {
     }
   }
 
+  // Quick toggle for single cell corrections (click on already-set cell)
+  const handleQuickToggle = useCallback((employeeId, date, currentState, onUpdate) => {
+    const newState = currentState === 'TURNO' ? 'LIBRE' : 'TURNO'
+    onUpdate(employeeId, date.toISOString().split('T')[0], newState, '')
+  }, [])
+
+  // Open quick edit modal for any state change
+  const handleQuickEdit = useCallback((employeeId, date, currentState) => {
+    setQuickEdit({
+      employeeId,
+      date: date.toISOString().split('T')[0],
+      currentState,
+    })
+  }, [])
+
+  const closeQuickEdit = useCallback(() => {
+    setQuickEdit(null)
+  }, [])
+
+  const applyQuickEdit = useCallback(async (newState, motivo, onUpdate) => {
+    if (!quickEdit) return
+    await onUpdate(quickEdit.employeeId, quickEdit.date, newState, motivo)
+    closeQuickEdit()
+  }, [quickEdit, closeQuickEdit])
+
   const resetSelection = () => {
     setSelectedDates([])
     setSelectedEmployee(null)
@@ -66,5 +101,11 @@ export function useScheduleGrid() {
     handleCellMouseEnter,
     handleCellMouseUp,
     resetSelection,
+    // Quick edit
+    quickEdit,
+    handleQuickToggle,
+    handleQuickEdit,
+    closeQuickEdit,
+    applyQuickEdit,
   }
 }

@@ -40,6 +40,27 @@ export default function CronogramaPage() {
   const grid = useScheduleGrid()
 
   const DAYS_IN_RANGE = 35
+  const [quickEditLoading, setQuickEditLoading] = useState(false)
+
+  // Quick update single cell (for corrections)
+  const handleQuickUpdate = async (employeeId, date, estado, motivo) => {
+    try {
+      setQuickEditLoading(true)
+      const { error } = await scheduleQueries.upsert({
+        empleado_id: employeeId,
+        fecha: date,
+        estado,
+        motivo: motivo || null,
+      })
+      if (error) throw error
+      grid.closeQuickEdit()
+      await loadEmployees()
+    } catch (err) {
+      setError(err.message || 'Error al actualizar')
+    } finally {
+      setQuickEditLoading(false)
+    }
+  }
 
   useEffect(() => {
     loadEmployees()
@@ -149,9 +170,18 @@ export default function CronogramaPage() {
     if (grid.isSelecting) return
 
     const dateStr = date.toISOString().split('T')[0]
-    grid.setSelectedEmployee(employeeId)
-    grid.setSelectedDates([dateStr])
-    grid.setShowModal(true)
+    const record = scheduleData[`${employeeId}-${dateStr}`]
+    const currentState = record?.estado || 'PROGRAMADO'
+
+    // If cell has a state set, open quick edit for correction
+    // If empty, use drag selection + modal for bulk changes
+    if (currentState !== 'PROGRAMADO') {
+      grid.handleQuickEdit(employeeId, date, currentState)
+    } else {
+      grid.setSelectedEmployee(employeeId)
+      grid.setSelectedDates([dateStr])
+      grid.setShowModal(true)
+    }
   }
 
   const handleApply = async () => {
@@ -526,6 +556,88 @@ export default function CronogramaPage() {
               </button>
               <button onClick={handleApply} className="btn-primary">
                 Guardar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Edición Rápida (Corrección individual) */}
+      {grid.quickEdit && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg max-w-md w-full mx-4">
+            <div className="bg-warning-600 text-white p-4 flex items-center justify-between">
+              <h3 className="text-lg font-bold">Corregir Turno</h3>
+              <button
+                onClick={grid.closeQuickEdit}
+                className="text-white hover:bg-warning-700 p-1 rounded"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Fecha
+                </label>
+                <p className="text-slate-900 font-medium">
+                  {new Date(grid.quickEdit.date).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Estado Actual
+                </label>
+                <p className="text-slate-900 font-medium">
+                  <span className={`badge ${grid.quickEdit.currentState === 'TURNO' ? 'badge-success' : grid.quickEdit.currentState === 'LIBRE' ? 'badge-secondary' : 'badge-warning'}`}>
+                    {grid.quickEdit.currentState}
+                  </span>
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Nuevo Estado
+                </label>
+                <select
+                  defaultValue={grid.quickEdit.currentState === 'TURNO' ? 'LIBRE' : 'TURNO'}
+                  onChange={(e) => grid.setFormData({ ...grid.formData, estado: e.target.value })}
+                  className="input w-full"
+                >
+                  <option value="TURNO">Turno</option>
+                  <option value="LIBRE">Libre</option>
+                  <option value="ENFERMO">Enfermo</option>
+                  <option value="VACACIONES">Vacaciones</option>
+                  <option value="FALTA">Falta</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Motivo de la corrección (Opcional)
+                </label>
+                <textarea
+                  value={grid.formData.motivo}
+                  onChange={e => grid.setFormData({ ...grid.formData, motivo: e.target.value })}
+                  className="input w-full"
+                  rows="2"
+                  placeholder="Ej: Error de digitación, cambio de plan..."
+                />
+              </div>
+            </div>
+
+            <div className="bg-slate-100 px-6 py-4 flex gap-2 justify-end">
+              <button onClick={grid.closeQuickEdit} className="btn-secondary">
+                Cancelar
+              </button>
+              <button
+                onClick={() => handleQuickUpdate(grid.quickEdit.employeeId, grid.quickEdit.date, grid.formData.estado, grid.formData.motivo)}
+                disabled={quickEditLoading}
+                className="btn-primary"
+              >
+                {quickEditLoading ? 'Guardando...' : 'Guardar Corrección'}
               </button>
             </div>
           </div>
