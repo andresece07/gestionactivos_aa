@@ -64,9 +64,33 @@ CREATE TABLE productos (
 CREATE INDEX idx_productos_categoria ON productos(categoria_id);
 CREATE INDEX idx_productos_activo ON productos(activo);
 CREATE INDEX idx_productos_sku ON productos(sku);
+CREATE INDEX idx_productos_marca ON productos(marca_id);
 
--- 4. CATÁLOGOS DE UBICACIÓN (Finca, Zona, Tolva) - CARGABLES DESDE EXCEL
+-- 4. CATÁLOGOS MAESTROS (cargables desde Excel)
 -- ============================================================================
+
+-- Marcas
+CREATE TABLE marcas (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  codigo text NOT NULL UNIQUE,           -- código corto ej: 'DYN', 'JNK', 'LON', 'PYL'
+  nombre text NOT NULL UNIQUE,           -- nombre completo ej: 'Dyness', 'Jinko Solar'
+  descripcion text,
+  pais_origen text,
+  sitio_web text,
+  activo boolean DEFAULT true,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone,
+  CONSTRAINT codigo_no_vacio CHECK (length(trim(codigo)) > 0),
+  CONSTRAINT nombre_no_vacio CHECK (length(trim(nombre)) > 0)
+);
+
+CREATE INDEX idx_marcas_activo ON marcas(activo);
+CREATE INDEX idx_marcas_codigo ON marcas(codigo);
+
+-- Agregar marca_id a productos
+ALTER TABLE productos ADD COLUMN IF NOT EXISTS marca_id uuid REFERENCES marcas(id) ON DELETE SET NULL;
+
+-- Fincas
 CREATE TABLE fincas (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   codigo text NOT NULL UNIQUE,           -- código corto ej: 'FIN-01'
@@ -485,6 +509,7 @@ CREATE POLICY "comentarios_activo_select_all" ON comentarios_activo FOR SELECT U
 -- Políticas INSERT autenticado
 CREATE POLICY "categorias_insert_auth" ON categorias_producto FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
 CREATE POLICY "productos_insert_auth" ON productos FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
+CREATE POLICY "marcas_insert_auth" ON marcas FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
 CREATE POLICY "fincas_insert_auth" ON fincas FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
 CREATE POLICY "zonas_insert_auth" ON zonas FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
 CREATE POLICY "tolvas_insert_auth" ON tolvas FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
@@ -495,6 +520,7 @@ CREATE POLICY "comentarios_activo_insert_auth" ON comentarios_activo FOR INSERT 
 -- Políticas UPDATE autenticado (solo campos permitidos)
 CREATE POLICY "categorias_update_auth" ON categorias_producto FOR UPDATE USING (auth.uid() IS NOT NULL);
 CREATE POLICY "productos_update_auth" ON productos FOR UPDATE USING (auth.uid() IS NOT NULL);
+CREATE POLICY "marcas_update_auth" ON marcas FOR UPDATE USING (auth.uid() IS NOT NULL);
 CREATE POLICY "fincas_update_auth" ON fincas FOR UPDATE USING (auth.uid() IS NOT NULL);
 CREATE POLICY "zonas_update_auth" ON zonas FOR UPDATE USING (auth.uid() IS NOT NULL);
 CREATE POLICY "tolvas_update_auth" ON tolvas FOR UPDATE USING (auth.uid() IS NOT NULL);
@@ -513,6 +539,20 @@ INSERT INTO categorias_producto (codigo, nombre, descripcion, tipo_obsolescencia
 ('BOM', 'Bombas', 'Bombas de agua', 'POR_USO', 10, 0.01, 'HORAS', '{"potencia_hp": "number", "caudal": "number", "altura_manometrica": "number"}'),
 ('GEN', 'Generadores', 'Generadores eléctricos', 'POR_USO', 20, 0.008, 'HORAS', '{"potencia_kva": "number", "tipo_combustible": "text", "voltaje": "number"}'),
 ('OTR', 'Otros Equipos', 'Equipos varios', 'LINEAL', 10, 0.01, 'ANOS', '{}')
+ON CONFLICT (codigo) DO NOTHING;
+
+-- Marcas (cargables desde Excel)
+INSERT INTO marcas (codigo, nombre, descripcion, pais_origen, sitio_web) VALUES
+('DYN', 'Dyness', 'Baterías LiFePO4 para almacenamiento residencial e industrial', 'China', 'https://dyness.com'),
+('PYL', 'Pylontech', 'Líder mundial en baterías de litio para almacenamiento de energía', 'China', 'https://pylontech.com.cn'),
+('JNK', 'Jinko Solar', 'Uno de los mayores fabricantes de módulos fotovoltaicos del mundo', 'China', 'https://jinkosolar.com'),
+('LON', 'Longi Solar', 'Tecnología monocristalina de alta eficiencia', 'China', 'https://longi.com'),
+('DEY', 'Deye', 'Inversores híbridos y off-grid', 'China', 'https://deyeinverter.com'),
+('HUA', 'Huawei', 'Inversores solares inteligentes', 'China', 'https://solar.huawei.com'),
+('VIC', 'Victron Energy', 'Equipos de energía off-grid y marinos', 'Países Bajos', 'https://victronenergy.com'),
+('SMA', 'SMA Solar Technology', 'Inversores fotovoltaicos alemanes', 'Alemania', 'https://sma.de'),
+('GRO', 'Growatt', 'Inversores y soluciones de almacenamiento', 'China', 'https://ginverter.com'),
+('GOO', 'GoodWe', 'Inversores inteligentes y soluciones de energía', 'China', 'https://goodwe.com')
 ON CONFLICT (codigo) DO NOTHING;
 
 -- Fincas ejemplo (cargables desde Excel)

@@ -628,6 +628,441 @@ export const movimientosQueries = {
   }
 }
 
+// ============================================================
+// NUEVAS QUERIES - CATÁLOGO DE ACTIVOS GENÉRICO
+// ============================================================
+
+// Categorías de producto
+export const categoryQueries = {
+  getAll: async () => {
+    const { data, error } = await supabase
+      .from('categorias_producto')
+      .select('*')
+      .eq('activo', true)
+      .order('codigo', { ascending: true })
+    return { data, error }
+  },
+  getById: async (id) => {
+    const { data, error } = await supabase
+      .from('categorias_producto')
+      .select('*')
+      .eq('id', id)
+      .single()
+    return { data, error }
+  },
+  create: async (category) => {
+    const user = await supabaseAuth.getUser()
+    const { data, error } = await supabase
+      .from('categorias_producto')
+      .insert([{ ...category, created_by: user?.id }])
+      .select()
+    return { data, error }
+  },
+  update: async (id, updates) => {
+    const { data, error } = await supabase
+      .from('categorias_producto')
+      .update({ ...updates, updated_at: new Date() })
+      .eq('id', id)
+      .select()
+    return { data, error }
+  },
+}
+
+// Marcas
+export const brandQueries = {
+  getAll: async () => {
+    const { data, error } = await supabase
+      .from('marcas')
+      .select('*')
+      .eq('activo', true)
+      .order('nombre', { ascending: true })
+    return { data, error }
+  },
+  getById: async (id) => {
+    const { data, error } = await supabase
+      .from('marcas')
+      .select('*')
+      .eq('id', id)
+      .single()
+    return { data, error }
+  },
+  create: async (brand) => {
+    const user = await supabaseAuth.getUser()
+    const { data, error } = await supabase
+      .from('marcas')
+      .insert([{ ...brand, created_by: user?.id }])
+      .select()
+    return { data, error }
+  },
+  update: async (id, updates) => {
+    const { data, error } = await supabase
+      .from('marcas')
+      .update({ ...updates, updated_at: new Date() })
+      .eq('id', id)
+      .select()
+    return { data, error }
+  },
+}
+
+// Productos (SKUs)
+export const productQueries = {
+  getAll: async (filters = {}) => {
+    let query = supabase
+      .from('productos')
+      .select(`
+        *,
+        categorias_producto (codigo, nombre, tipo_obsolescencia, vida_util_anos, factor_degradacion, unidad_medida_vida),
+        marcas (codigo, nombre)
+      `)
+      .eq('activo', true)
+      .order('sku', { ascending: true })
+
+    if (filters.categoria_id) {
+      query = query.eq('categoria_id', filters.categoria_id)
+    }
+    if (filters.marca_id) {
+      query = query.eq('marca_id', filters.marca_id)
+    }
+
+    const { data, error } = await query
+    return { data, error }
+  },
+  getById: async (id) => {
+    const { data, error } = await supabase
+      .from('productos')
+      .select(`
+        *,
+        categorias_producto (codigo, nombre, tipo_obsolescencia, vida_util_anos, factor_degradacion, unidad_medida_vida),
+        marcas (codigo, nombre)
+      `)
+      .eq('id', id)
+      .single()
+    return { data, error }
+  },
+  create: async (product) => {
+    const user = await supabaseAuth.getUser()
+    const { data, error } = await supabase
+      .from('productos')
+      .insert([{ ...product, created_by: user?.id }])
+      .select()
+    return { data, error }
+  },
+  update: async (id, updates) => {
+    const { data, error } = await supabase
+      .from('productos')
+      .update({ ...updates, updated_at: new Date() })
+      .eq('id', id)
+      .select()
+    return { data, error }
+  },
+}
+
+// Fincas
+export const farmQueries = {
+  getAll: async () => {
+    const { data, error } = await supabase
+      .from('fincas')
+      .select('*')
+      .eq('activo', true)
+      .order('nombre', { ascending: true })
+    return { data, error }
+  },
+  getById: async (id) => {
+    const { data, error } = await supabase
+      .from('fincas')
+      .select('*')
+      .eq('id', id)
+      .single()
+    return { data, error }
+  },
+  create: async (farm) => {
+    const user = await supabaseAuth.getUser()
+    const { data, error } = await supabase
+      .from('fincas')
+      .insert([{ ...farm, created_by: user?.id }])
+      .select()
+    return { data, error }
+  },
+  update: async (id, updates) => {
+    const { data, error } = await supabase
+      .from('fincas')
+      .update({ ...updates, updated_at: new Date() })
+      .eq('id', id)
+      .select()
+    return { data, error }
+  },
+}
+
+// Zonas
+export const zoneQueries = {
+  getAll: async (fincaId) => {
+    let query = supabase
+      .from('zonas')
+      .select(`
+        *,
+        fincas (codigo, nombre)
+      `)
+      .eq('activo', true)
+      .order('nombre', { ascending: true })
+
+    if (fincaId) {
+      query = query.eq('finca_id', fincaId)
+    }
+
+    const { data, error } = await query
+    return { data, error }
+  },
+  getById: async (id) => {
+    const { data, error } = await supabase
+      .from('zonas')
+      .select(`
+        *,
+        fincas (codigo, nombre)
+      `)
+      .eq('id', id)
+      .single()
+    return { data, error }
+  },
+  create: async (zone) => {
+    const user = await supabaseAuth.getUser()
+    const { data, error } = await supabase
+      .from('zonas')
+      .insert([{ ...zone, created_by: user?.id }])
+      .select()
+    return { data, error }
+  },
+  update: async (id, updates) => {
+    const { data, error } = await supabase
+      .from('zonas')
+      .update({ ...updates, updated_at: new Date() })
+      .eq('id', id)
+      .select()
+    return { data, error }
+  },
+}
+
+// Tolvas
+export const hopperQueries = {
+  getAll: async (zonaId) => {
+    let query = supabase
+      .from('tolvas')
+      .select(`
+        *,
+        zonas (codigo, nombre, fincas (codigo, nombre))
+      `)
+      .eq('activo', true)
+      .order('nombre', { ascending: true })
+
+    if (zonaId) {
+      query = query.eq('zona_id', zonaId)
+    }
+
+    const { data, error } = await query
+    return { data, error }
+  },
+  getById: async (id) => {
+    const { data, error } = await supabase
+      .from('tolvas')
+      .select(`
+        *,
+        zonas (codigo, nombre, fincas (codigo, nombre))
+      `)
+      .eq('id', id)
+      .single()
+    return { data, error }
+  },
+  create: async (hopper) => {
+    const user = await supabaseAuth.getUser()
+    const { data, error } = await supabase
+      .from('tolvas')
+      .insert([{ ...hopper, created_by: user?.id }])
+      .select()
+    return { data, error }
+  },
+  update: async (id, updates) => {
+    const { data, error } = await supabase
+      .from('tolvas')
+      .update({ ...updates, updated_at: new Date() })
+      .eq('id', id)
+      .select()
+    return { data, error }
+  },
+}
+
+// Activos (reemplaza baterías)
+export const assetQueries = {
+  getAll: async (filters = {}) => {
+    let query = supabase
+      .from('activos')
+      .select(`
+        *,
+        productos (
+          sku, nombre, marca, modelo, voltaje_nominal,
+          categorias_producto (codigo, nombre, tipo_obsolescencia, vida_util_anos),
+          marcas (codigo, nombre)
+        ),
+        fincas (codigo, nombre),
+        zonas (codigo, nombre),
+        tolvas (codigo, nombre),
+        piscinas (nombre),
+        proveedores (nombre)
+      `)
+      .order('created_at', { ascending: false })
+
+    if (filters.producto_id) query = query.eq('producto_id', filters.producto_id)
+    if (filters.finca_id) query = query.eq('finca_id', filters.finca_id)
+    if (filters.zona_id) query = query.eq('zona_id', filters.zona_id)
+    if (filters.tolva_id) query = query.eq('tolva_id', filters.tolva_id)
+    if (filters.piscina_id) query = query.eq('piscina_id', filters.piscina_id)
+    if (filters.estado) query = query.eq('estado', filters.estado)
+    if (filters.proveedor_id) query = query.eq('proveedor_id', filters.proveedor_id)
+
+    const { data, error } = await query
+    return { data, error }
+  },
+  getById: async (id) => {
+    const { data, error } = await supabase
+      .from('activos')
+      .select(`
+        *,
+        productos (
+          sku, nombre, marca, modelo, voltaje_nominal, especificaciones,
+          categorias_producto (codigo, nombre, tipo_obsolescencia, vida_util_anos, factor_degradacion, unidad_medida_vida),
+          marcas (codigo, nombre)
+        ),
+        fincas (codigo, nombre),
+        zonas (codigo, nombre),
+        tolvas (codigo, nombre),
+        piscinas (nombre, zona),
+        proveedores (nombre, contacto, email, telefono)
+      `)
+      .eq('id', id)
+      .single()
+    return { data, error }
+  },
+  create: async (asset) => {
+    const user = await supabaseAuth.getUser()
+    const { data, error } = await supabase
+      .from('activos')
+      .insert([{ ...asset, created_by: user?.id }])
+      .select()
+    return { data, error }
+  },
+  update: async (id, updates) => {
+    const user = await supabaseAuth.getUser()
+    const { data, error } = await supabase
+      .from('activos')
+      .update({ ...updates, updated_at: new Date(), updated_by: user?.id })
+      .eq('id', id)
+      .select()
+    return { data, error }
+  },
+  // Calcular obsolescencia
+  calculateObsolescence: async (assetId) => {
+    const { data, error } = await supabase
+      .rpc('calcular_obsolescencia_activo', { activo_id: assetId })
+    return { data, error }
+  },
+  // Calcular vida útil restante
+  calculateRemainingLife: async (assetId) => {
+    const { data, error } = await supabase
+      .rpc('calcular_vida_util_restante', { activo_id: assetId })
+    return { data, error }
+  },
+  // Obtener activos con obsolescencia crítica
+  getCriticalObsolescence: async () => {
+    const { data, error } = await supabase
+      .from('vw_activos_obsolescencia_critica')
+      .select('*')
+    return { data, error }
+  },
+}
+
+// Movimientos de activos
+export const assetMovementQueries = {
+  getByAsset: async (assetId) => {
+    const { data, error } = await supabase
+      .from('movimientos_activos')
+      .select(`
+        *,
+        fincas!finca_id_origen (codigo, nombre),
+        zonas!zona_id_origen (codigo, nombre),
+        tolvas!tolva_id_origen (codigo, nombre),
+        piscinas!piscina_id_origen (nombre),
+        fincas!finca_id_destino (codigo, nombre),
+        zonas!zona_id_destino (codigo, nombre),
+        tolvas!tolva_id_destino (codigo, nombre),
+        piscinas!piscina_id_destino (nombre)
+      `)
+      .eq('activo_id', assetId)
+      .order('fecha_movimiento', { ascending: false })
+    return { data, error }
+  },
+  getAll: async (filters = {}) => {
+    let query = supabase
+      .from('movimientos_activos')
+      .select(`
+        *,
+        activos (codigo_unico, productos (sku, nombre)),
+        fincas!finca_id_origen (codigo, nombre),
+        zonas!zona_id_origen (codigo, nombre),
+        tolvas!tolva_id_origen (codigo, nombre)
+      `)
+      .order('fecha_movimiento', { ascending: false })
+
+    if (filters.activo_id) query = query.eq('activo_id', filters.activo_id)
+    if (filters.tipo_movimiento) query = query.eq('tipo_movimiento', filters.tipo_movimiento)
+    if (filters.fechaInicio) query = query.gte('fecha_movimiento', filters.fechaInicio)
+    if (filters.fechaFin) query = query.lte('fecha_movimiento', filters.fechaFin)
+
+    const { data, error } = await query
+    return { data, error }
+  },
+  create: async (movement) => {
+    const user = await supabaseAuth.getUser()
+    const { data, error } = await supabase
+      .from('movimientos_activos')
+      .insert([{ ...movement, usuario_id: user?.id, usuario_nombre: user?.email }])
+      .select()
+    return { data, error }
+  },
+  update: async (id, updates) => {
+    const { data, error } = await supabase
+      .from('movimientos_activos')
+      .update(updates)
+      .eq('id', id)
+      .select()
+    return { data, error }
+  },
+  delete: async (id) => {
+    const { error } = await supabase
+      .from('movimientos_activos')
+      .delete()
+      .eq('id', id)
+    return { error }
+  },
+}
+
+// Comentarios de activos
+export const assetCommentQueries = {
+  getByAsset: async (assetId) => {
+    const { data, error } = await supabase
+      .from('comentarios_activo')
+      .select('*')
+      .eq('activo_id', assetId)
+      .order('fecha_creacion', { ascending: false })
+    return { data, error }
+  },
+  create: async (assetId, contenido) => {
+    const user = await supabaseAuth.getUser()
+    const { data, error } = await supabase
+      .from('comentarios_activo')
+      .insert([{ activo_id: assetId, contenido, usuario_id: user?.id }])
+      .select()
+    return { data, error }
+  },
+}
+
 // Función para escuchar cambios en tiempo real
 export const subscribeToChanges = (table, callback) => {
   const subscription = supabase
