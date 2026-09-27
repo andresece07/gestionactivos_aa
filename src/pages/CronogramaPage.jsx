@@ -133,7 +133,7 @@ export default function CronogramaPage() {
       }
     }
 
-    return Math.min(count, 6)
+    return count
   }
 
   const getAvailablePersonnel = (date, dates) => {
