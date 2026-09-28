@@ -11,6 +11,15 @@ import CreateBatteryPage from './pages/CreateBatteryPage'
 import BatteryLifeUtilReportPage from './pages/BatteryLifeUtilReportPage'
 import CronogramaPage from './pages/CronogramaPage'
 import QRScannerPage from './pages/QRScannerPage'
+import AssetsPage from './pages/AssetsPage'
+import AssetDetailPage from './pages/AssetDetailPage'
+import CreateAssetPage from './pages/CreateAssetPage'
+import CategoriesPage from './pages/CategoriesPage'
+import BrandsPage from './pages/BrandsPage'
+import ProductsPage from './pages/ProductsPage'
+import FarmsPage from './pages/FarmsPage'
+import ZonesPage from './pages/ZonesPage'
+import HoppersPage from './pages/HoppersPage'
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth()
@@ -105,6 +114,78 @@ export default function App() {
           element={
             <ProtectedRoute>
               <QRScannerPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/activos"
+          element={
+            <ProtectedRoute>
+              <AssetsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/activos/nuevo"
+          element={
+            <ProtectedRoute>
+              <CreateAssetPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/activos/:id"
+          element={
+            <ProtectedRoute>
+              <AssetDetailPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/categorias"
+          element={
+            <ProtectedRoute>
+              <CategoriesPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/marcas"
+          element={
+            <ProtectedRoute>
+              <BrandsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/productos"
+          element={
+            <ProtectedRoute>
+              <ProductsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/fincas"
+          element={
+            <ProtectedRoute>
+              <FarmsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/zonas"
+          element={
+            <ProtectedRoute>
+              <ZonesPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/tolvas"
+          element={
+            <ProtectedRoute>
+              <HoppersPage />
             </ProtectedRoute>
           }
         />
