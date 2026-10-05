@@ -10,5 +10,16 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: false,
+    chunkSizeWarningLimit: 600,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'react-router-dom'],
+          charts: ['recharts'],
+          excel: ['xlsx'],
+          supabase: ['@supabase/supabase-js'],
+        },
+      },
+    },
   },
 })

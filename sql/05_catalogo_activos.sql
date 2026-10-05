@@ -64,7 +64,6 @@ CREATE TABLE productos (
 CREATE INDEX idx_productos_categoria ON productos(categoria_id);
 CREATE INDEX idx_productos_activo ON productos(activo);
 CREATE INDEX idx_productos_sku ON productos(sku);
-CREATE INDEX idx_productos_marca ON productos(marca_id);
 
 -- 4. CATÁLOGOS MAESTROS (cargables desde Excel)
 -- ============================================================================
@@ -89,6 +88,7 @@ CREATE INDEX idx_marcas_codigo ON marcas(codigo);
 
 -- Agregar marca_id a productos
 ALTER TABLE productos ADD COLUMN IF NOT EXISTS marca_id uuid REFERENCES marcas(id) ON DELETE SET NULL;
+CREATE INDEX IF NOT EXISTS idx_productos_marca ON productos(marca_id);
 
 -- Fincas
 CREATE TABLE fincas (
@@ -489,6 +489,7 @@ ORDER BY obsolescencia_pct DESC, vida_util_restante_anos ASC;
 -- ============================================================================
 ALTER TABLE categorias_producto ENABLE ROW LEVEL SECURITY;
 ALTER TABLE productos ENABLE ROW LEVEL SECURITY;
+ALTER TABLE marcas ENABLE ROW LEVEL SECURITY;
 ALTER TABLE fincas ENABLE ROW LEVEL SECURITY;
 ALTER TABLE zonas ENABLE ROW LEVEL SECURITY;
 ALTER TABLE tolvas ENABLE ROW LEVEL SECURITY;
@@ -499,6 +500,7 @@ ALTER TABLE comentarios_activo ENABLE ROW LEVEL SECURITY;
 -- Políticas SELECT público
 CREATE POLICY "categorias_select_all" ON categorias_producto FOR SELECT USING (true);
 CREATE POLICY "productos_select_all" ON productos FOR SELECT USING (true);
+CREATE POLICY "marcas_select_all" ON marcas FOR SELECT USING (true);
 CREATE POLICY "fincas_select_all" ON fincas FOR SELECT USING (true);
 CREATE POLICY "zonas_select_all" ON zonas FOR SELECT USING (true);
 CREATE POLICY "tolvas_select_all" ON tolvas FOR SELECT USING (true);
@@ -591,15 +593,20 @@ ON CONFLICT DO NOTHING;
 -- Productos ejemplo (SKUs cargables desde Excel)
 WITH cat_bat AS (SELECT id FROM categorias_producto WHERE codigo = 'BAT'),
      cat_pan AS (SELECT id FROM categorias_producto WHERE codigo = 'PAN'),
-     cat_inv AS (SELECT id FROM categorias_producto WHERE codigo = 'INV')
-INSERT INTO productos (sku, nombre, categoria_id, marca, modelo, especificaciones, voltaje_nominal, vida_util_anos, factor_degradacion) VALUES
-('BAT-48V-10KWH', 'Batería 48V 10.5kWh LiFePO4', (SELECT id FROM cat_bat), 'Dyness', 'PowerBox 10', '{"capacidad_kwh": 10.5, "amperios": 210, "quimica": "LiFePO4"}', 48, 10, 0.0005),
-('BAT-48V-15KWH', 'Batería 48V 15.2kWh LiFePO4', (SELECT id FROM cat_bat), 'Dyness', 'PowerBox 15', '{"capacidad_kwh": 15.2, "amperios": 300, "quimica": "LiFePO4"}', 48, 10, 0.0005),
-('BAT-24V-5KWH', 'Batería 24V 5.0kWh LiFePO4', (SELECT id FROM cat_bat), 'Pylontech', 'US2000C', '{"capacidad_kwh": 5.0, "amperios": 200, "quimica": "LiFePO4"}', 24, 10, 0.0005),
-('PAN-550W', 'Panel Solar 550W Mono', (SELECT id FROM cat_pan), 'Jinko Solar', 'JKM550M-72HL4', '{"potencia_wp": 550, "voltaje_max": 49.2, "corriente_max": 13.5, "eficiencia": 21.3}', NULL, 25, 0.005),
-('PAN-580W', 'Panel Solar 580W Mono', (SELECT id FROM cat_pan), 'Longi Solar', 'LR5-72HBD-580M', '{"potencia_wp": 580, "voltaje_max": 51.8, "corriente_max": 13.8, "eficiencia": 22.1}', NULL, 25, 0.005),
-('INV-5KW', 'Inversor Híbrido 5kW', (SELECT id FROM cat_inv), 'Deye', 'SUN-5K-SG04LP3', '{"potencia_kw": 5, "voltaje_entrada": 48, "voltaje_salida": 220, "tipo": "hibrido"}', NULL, 15, 0.01),
-('INV-10KW', 'Inversor Híbrido 10kW', (SELECT id FROM cat_inv), 'Deye', 'SUN-10K-SG04LP3', '{"potencia_kw": 10, "voltaje_entrada": 48, "voltaje_salida": 220, "tipo": "hibrido"}', NULL, 15, 0.01)
+     cat_inv AS (SELECT id FROM categorias_producto WHERE codigo = 'INV'),
+     m_dyn AS (SELECT id FROM marcas WHERE codigo = 'DYN'),
+     m_pyl AS (SELECT id FROM marcas WHERE codigo = 'PYL'),
+     m_jnk AS (SELECT id FROM marcas WHERE codigo = 'JNK'),
+     m_lon AS (SELECT id FROM marcas WHERE codigo = 'LON'),
+     m_dey AS (SELECT id FROM marcas WHERE codigo = 'DEY')
+INSERT INTO productos (sku, nombre, categoria_id, marca_id, marca, modelo, especificaciones, voltaje_nominal, vida_util_anos, factor_degradacion) VALUES
+('BAT-48V-10KWH', 'Batería 48V 10.5kWh LiFePO4', (SELECT id FROM cat_bat), (SELECT id FROM m_dyn), 'Dyness', 'PowerBox 10', '{"capacidad_kwh": 10.5, "amperios": 210, "quimica": "LiFePO4"}', 48, 10, 0.0005),
+('BAT-48V-15KWH', 'Batería 48V 15.2kWh LiFePO4', (SELECT id FROM cat_bat), (SELECT id FROM m_dyn), 'Dyness', 'PowerBox 15', '{"capacidad_kwh": 15.2, "amperios": 300, "quimica": "LiFePO4"}', 48, 10, 0.0005),
+('BAT-24V-5KWH', 'Batería 24V 5.0kWh LiFePO4', (SELECT id FROM cat_bat), (SELECT id FROM m_pyl), 'Pylontech', 'US2000C', '{"capacidad_kwh": 5.0, "amperios": 200, "quimica": "LiFePO4"}', 24, 10, 0.0005),
+('PAN-550W', 'Panel Solar 550W Mono', (SELECT id FROM cat_pan), (SELECT id FROM m_jnk), 'Jinko Solar', 'JKM550M-72HL4', '{"potencia_wp": 550, "voltaje_max": 49.2, "corriente_max": 13.5, "eficiencia": 21.3}', NULL, 25, 0.005),
+('PAN-580W', 'Panel Solar 580W Mono', (SELECT id FROM cat_pan), (SELECT id FROM m_lon), 'Longi Solar', 'LR5-72HBD-580M', '{"potencia_wp": 580, "voltaje_max": 51.8, "corriente_max": 13.8, "eficiencia": 22.1}', NULL, 25, 0.005),
+('INV-5KW', 'Inversor Híbrido 5kW', (SELECT id FROM cat_inv), (SELECT id FROM m_dey), 'Deye', 'SUN-5K-SG04LP3', '{"potencia_kw": 5, "voltaje_entrada": 48, "voltaje_salida": 220, "tipo": "hibrido"}', NULL, 15, 0.01),
+('INV-10KW', 'Inversor Híbrido 10kW', (SELECT id FROM cat_inv), (SELECT id FROM m_dey), 'Deye', 'SUN-10K-SG04LP3', '{"potencia_kw": 10, "voltaje_entrada": 48, "voltaje_salida": 220, "tipo": "hibrido"}', NULL, 15, 0.01)
 ON CONFLICT (sku) DO NOTHING;
 
 -- 12. TRIGGERS DE UPDATED_AT
@@ -614,6 +621,7 @@ $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER trigger_categorias_updated_at BEFORE UPDATE ON categorias_producto FOR EACH ROW EXECUTE FUNCTION actualizar_updated_at();
 CREATE TRIGGER trigger_productos_updated_at BEFORE UPDATE ON productos FOR EACH ROW EXECUTE FUNCTION actualizar_updated_at();
+CREATE TRIGGER trigger_marcas_updated_at BEFORE UPDATE ON marcas FOR EACH ROW EXECUTE FUNCTION actualizar_updated_at();
 CREATE TRIGGER trigger_fincas_updated_at BEFORE UPDATE ON fincas FOR EACH ROW EXECUTE FUNCTION actualizar_updated_at();
 CREATE TRIGGER trigger_zonas_updated_at BEFORE UPDATE ON zonas FOR EACH ROW EXECUTE FUNCTION actualizar_updated_at();
 CREATE TRIGGER trigger_tolvas_updated_at BEFORE UPDATE ON tolvas FOR EACH ROW EXECUTE FUNCTION actualizar_updated_at();

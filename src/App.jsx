@@ -1,25 +1,28 @@
+import { Suspense, lazy } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from './hooks/useAuth'
 import { Navbar } from './components/Navbar'
 import { Loading } from './components/Loading'
+import { ErrorBoundary } from './components/ErrorBoundary'
 import LoginPage from './pages/LoginPage'
 import ModulesPage from './pages/ModulesPage'
-import DashboardPage from './pages/DashboardPage'
-import BatteriesPage from './pages/BatteriesPage'
-import BatteryDetailPage from './pages/BatteryDetailPage'
-import CreateBatteryPage from './pages/CreateBatteryPage'
-import BatteryLifeUtilReportPage from './pages/BatteryLifeUtilReportPage'
-import CronogramaPage from './pages/CronogramaPage'
-import QRScannerPage from './pages/QRScannerPage'
-import AssetsPage from './pages/AssetsPage'
-import AssetDetailPage from './pages/AssetDetailPage'
-import CreateAssetPage from './pages/CreateAssetPage'
-import CategoriesPage from './pages/CategoriesPage'
-import BrandsPage from './pages/BrandsPage'
-import ProductsPage from './pages/ProductsPage'
-import FarmsPage from './pages/FarmsPage'
-import ZonesPage from './pages/ZonesPage'
-import HoppersPage from './pages/HoppersPage'
+
+const DashboardPage = lazy(() => import('./pages/DashboardPage'))
+const BatteriesPage = lazy(() => import('./pages/BatteriesPage'))
+const BatteryDetailPage = lazy(() => import('./pages/BatteryDetailPage'))
+const CreateBatteryPage = lazy(() => import('./pages/CreateBatteryPage'))
+const BatteryLifeUtilReportPage = lazy(() => import('./pages/BatteryLifeUtilReportPage'))
+const CronogramaPage = lazy(() => import('./pages/CronogramaPage'))
+const QRScannerPage = lazy(() => import('./pages/QRScannerPage'))
+const AssetsPage = lazy(() => import('./pages/AssetsPage'))
+const AssetDetailPage = lazy(() => import('./pages/AssetDetailPage'))
+const CreateAssetPage = lazy(() => import('./pages/CreateAssetPage'))
+const CategoriesPage = lazy(() => import('./pages/CategoriesPage'))
+const BrandsPage = lazy(() => import('./pages/BrandsPage'))
+const ProductsPage = lazy(() => import('./pages/ProductsPage'))
+const FarmsPage = lazy(() => import('./pages/FarmsPage'))
+const ZonesPage = lazy(() => import('./pages/ZonesPage'))
+const HoppersPage = lazy(() => import('./pages/HoppersPage'))
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth()
@@ -35,6 +38,12 @@ const ProtectedRoute = ({ children }) => {
   return children
 }
 
+const LazyPage = ({ children }) => (
+  <Suspense fallback={<Loading message="Cargando módulo..." />}>
+    {children}
+  </Suspense>
+)
+
 export default function App() {
   const { isAuthenticated, loading } = useAuth()
 
@@ -43,156 +52,155 @@ export default function App() {
   }
 
   return (
-    <BrowserRouter>
-      {isAuthenticated && <Navbar />}
-      <Routes>
-        {/* Public Routes */}
-        <Route
-          path="/login"
-          element={isAuthenticated ? <Navigate to="/" replace /> : <LoginPage />}
-        />
+    <ErrorBoundary>
+      <BrowserRouter>
+        {isAuthenticated && <Navbar />}
+        <Routes>
+          <Route
+            path="/login"
+            element={isAuthenticated ? <Navigate to="/" replace /> : <LoginPage />}
+          />
 
-        {/* Protected Routes */}
-        <Route
-          path="/"
-          element={
-            <ProtectedRoute>
-              <ModulesPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <DashboardPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/baterias"
-          element={
-            <ProtectedRoute>
-              <BatteriesPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/baterias/nueva"
-          element={
-            <ProtectedRoute>
-              <CreateBatteryPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/baterias/:id"
-          element={
-            <ProtectedRoute>
-              <BatteryDetailPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/baterias/reporte-vida-util"
-          element={
-            <ProtectedRoute>
-              <BatteryLifeUtilReportPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/cronograma"
-          element={
-            <ProtectedRoute>
-              <CronogramaPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/qr-scanner"
-          element={
-            <ProtectedRoute>
-              <QRScannerPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/activos"
-          element={
-            <ProtectedRoute>
-              <AssetsPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/activos/nuevo"
-          element={
-            <ProtectedRoute>
-              <CreateAssetPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/activos/:id"
-          element={
-            <ProtectedRoute>
-              <AssetDetailPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/categorias"
-          element={
-            <ProtectedRoute>
-              <CategoriesPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/marcas"
-          element={
-            <ProtectedRoute>
-              <BrandsPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/productos"
-          element={
-            <ProtectedRoute>
-              <ProductsPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/fincas"
-          element={
-            <ProtectedRoute>
-              <FarmsPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/zonas"
-          element={
-            <ProtectedRoute>
-              <ZonesPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/tolvas"
-          element={
-            <ProtectedRoute>
-              <HoppersPage />
-            </ProtectedRoute>
-          }
-        />
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <ModulesPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <LazyPage><DashboardPage /></LazyPage>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/baterias"
+            element={
+              <ProtectedRoute>
+                <LazyPage><BatteriesPage /></LazyPage>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/baterias/nueva"
+            element={
+              <ProtectedRoute>
+                <LazyPage><CreateBatteryPage /></LazyPage>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/baterias/:id"
+            element={
+              <ProtectedRoute>
+                <LazyPage><BatteryDetailPage /></LazyPage>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/baterias/reporte-vida-util"
+            element={
+              <ProtectedRoute>
+                <LazyPage><BatteryLifeUtilReportPage /></LazyPage>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/cronograma"
+            element={
+              <ProtectedRoute>
+                <LazyPage><CronogramaPage /></LazyPage>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/qr-scanner"
+            element={
+              <ProtectedRoute>
+                <LazyPage><QRScannerPage /></LazyPage>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/activos"
+            element={
+              <ProtectedRoute>
+                <LazyPage><AssetsPage /></LazyPage>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/activos/nuevo"
+            element={
+              <ProtectedRoute>
+                <LazyPage><CreateAssetPage /></LazyPage>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/activos/:id"
+            element={
+              <ProtectedRoute>
+                <LazyPage><AssetDetailPage /></LazyPage>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/categorias"
+            element={
+              <ProtectedRoute>
+                <LazyPage><CategoriesPage /></LazyPage>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/marcas"
+            element={
+              <ProtectedRoute>
+                <LazyPage><BrandsPage /></LazyPage>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/productos"
+            element={
+              <ProtectedRoute>
+                <LazyPage><ProductsPage /></LazyPage>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/fincas"
+            element={
+              <ProtectedRoute>
+                <LazyPage><FarmsPage /></LazyPage>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/zonas"
+            element={
+              <ProtectedRoute>
+                <LazyPage><ZonesPage /></LazyPage>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/tolvas"
+            element={
+              <ProtectedRoute>
+                <LazyPage><HoppersPage /></LazyPage>
+              </ProtectedRoute>
+            }
+          />
 
-        {/* 404 */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </BrowserRouter>
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </ErrorBoundary>
   )
 }

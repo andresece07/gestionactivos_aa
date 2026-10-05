@@ -260,7 +260,6 @@ export default function BatteryDetailPage() {
 
   useEffect(() => {
     if (battery) {
-      console.log('Battery loaded:', battery)
       setTechForm({
         observaciones: battery.observaciones || '',
         imagen_url: battery.imagen_url || '',
