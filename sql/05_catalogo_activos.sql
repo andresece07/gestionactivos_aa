@@ -267,8 +267,8 @@ RETURNS TABLE(
 ) AS $$
 BEGIN
   RETURN QUERY
-  SELECT 
-    COALESCE(p.tipo_obsolescencia, c.tipo_obsolescencia),
+  SELECT
+    c.tipo_obsolescencia,
     COALESCE(p.vida_util_anos, c.vida_util_anos),
     COALESCE(p.factor_degradacion, c.factor_degradacion),
     COALESCE(p.unidad_medida_vida, c.unidad_medida_vida)
