@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Plus, Edit2, Trash2, Download, Upload, MapPin, FileSpreadsheet } from 'lucide-react'
+import { Plus, Edit2, Trash2, Download, Upload, MapPin } from 'lucide-react'
 import * as XLSX from 'xlsx'
 import { farmQueries, supabase } from '../lib/supabaseClient'
 import { Loading } from '../components/Loading'

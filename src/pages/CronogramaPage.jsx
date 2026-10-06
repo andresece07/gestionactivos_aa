@@ -39,7 +39,6 @@ export default function CronogramaPage() {
 
   const grid = useScheduleGrid()
 
-  const DAYS_IN_RANGE = 35
   const [quickEditLoading, setQuickEditLoading] = useState(false)
 
   // Quick update single cell (for corrections)

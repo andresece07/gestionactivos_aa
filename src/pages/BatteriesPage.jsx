@@ -38,16 +38,17 @@ export default function BatteriesPage() {
   }
 
   const loadDays = async (bats) => {
-    const days = {}
-    const lifeUtil = {}
-    for (const battery of bats) {
-      const { data: daysData } = await batteryQueries.calculateDaysFromInstallation(battery.id)
-      const { data: lifeData } = await batteryQueries.getLifeUtilStatus(battery.id)
-      days[battery.id] = daysData || 0
-      lifeUtil[battery.id] = lifeData
-    }
-    setDaysCache(days)
-    setLifeUtilCache(lifeUtil)
+    const results = await Promise.all(
+      bats.map(async (battery) => {
+        const [{ data: daysData }, { data: lifeData }] = await Promise.all([
+          batteryQueries.calculateDaysFromInstallation(battery.id),
+          batteryQueries.getLifeUtilStatus(battery.id),
+        ])
+        return [battery.id, daysData || 0, lifeData]
+      })
+    )
+    setDaysCache(Object.fromEntries(results.map(([id, days]) => [id, days])))
+    setLifeUtilCache(Object.fromEntries(results.map(([id, , life]) => [id, life])))
   }
 
   if (loading) {

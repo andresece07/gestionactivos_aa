@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Package, Plus, Search, Eye, AlertTriangle, TrendingUp, Download, Upload, FileSpreadsheet } from 'lucide-react'
+import { Package, Plus, Eye, AlertTriangle, TrendingUp, Download, Upload } from 'lucide-react'
 import * as XLSX from 'xlsx'
 import { assetQueries, productQueries, farmQueries, zoneQueries, hopperQueries, poolQueries, supplierQueries } from '../lib/supabaseClient'
 import { Loading } from '../components/Loading'

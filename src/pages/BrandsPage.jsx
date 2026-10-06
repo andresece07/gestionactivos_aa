@@ -135,7 +135,7 @@ export default function BrandsPage() {
                   <td className="font-mono text-sm">{brand.codigo}</td>
                   <td className="font-medium">{brand.nombre}</td>
                   <td>{brand.pais_origen || '—'}</td>
-                  <td>{brand.sitio_web ? <a href={brand.sitio_web} target="_blank" rel="noopener" className="text-primary-600 text-sm">{brand.sitio_web}</a> : '—'}</td>
+                  <td>{brand.sitio_web ? <a href={brand.sitio_web} target="_blank" rel="noopener noreferrer" className="text-primary-600 text-sm">{brand.sitio_web}</a> : '—'}</td>
                   <td><span className={`badge ${brand.activo ? 'badge-success' : 'badge-danger'}`}>{brand.activo ? 'Sí' : 'No'}</span></td>
                   <td>
                     <button onClick={() => handleOpenEdit(brand)} className="text-primary-600 hover:text-primary-700 mr-3"><Edit2 className="h-4 w-4" /></button>

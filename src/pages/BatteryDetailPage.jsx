@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { useParams, useNavigate, useLocation } from 'react-router-dom'
-import { ArrowLeft, MessageSquare, Info, History, Plus, QrCode, Edit2, Trash2, Calendar, Download, Truck } from 'lucide-react'
+import { useParams, useNavigate } from 'react-router-dom'
+import { ArrowLeft, MessageSquare, Info, History, Plus, Edit2, Trash2, Download, Truck } from 'lucide-react'
 import * as XLSX from 'xlsx'
 import { batteryQueries, commentQueries, movimientosQueries, poolQueries, supplierQueries, supabase } from '../lib/supabaseClient'
 import { Loading } from '../components/Loading'
@@ -10,7 +10,6 @@ import { ErrorAlert } from '../components/Error'
 export default function BatteryDetailPage() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const location = useLocation()
   const [battery, setBattery] = useState(null)
   const [comments, setComments] = useState([])
   const [movimientos, setMovimientos] = useState([])

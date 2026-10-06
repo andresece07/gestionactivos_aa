@@ -21,6 +21,11 @@ export default [
       'react/react-in-jsx-scope': 'off',
       'react/prop-types': 'off',
       'no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+      // Reglas nuevas de react-hooks v7 muy estrictas para este codebase:
+      // el fetch-en-useEffect es el patrón idiomático usado en toda la app
+      // (migrar a React Query/Suspense queda fuera de alcance).
+      'react-hooks/set-state-in-effect': 'warn',
+      'react-hooks/immutability': 'warn',
       'no-console': ['warn', { allow: ['warn', 'error'] }],
     },
     settings: { react: { version: 'detect' } },

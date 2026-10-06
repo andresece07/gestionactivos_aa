@@ -69,7 +69,7 @@ export default function CreateBatteryPage() {
       if (createError) throw createError
       return newProvider?.id
     } catch (err) {
-      throw new Error(`Error al crear/obtener proveedor: ${err.message}`)
+      throw new Error(`Error al crear/obtener proveedor: ${err.message}`, { cause: err })
     }
   }
 
