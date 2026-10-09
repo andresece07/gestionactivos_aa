@@ -113,9 +113,9 @@ ALTER TABLE comentarios_bateria ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "piscinas_select_all" ON piscinas FOR SELECT USING (true);
 CREATE POLICY "baterias_select_all" ON baterias FOR SELECT USING (true);
 CREATE POLICY "paros_select_all" ON paros_piscina FOR SELECT USING (true);
-CREATE POLICY "paros_insert_auth" ON paros_piscina FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
+CREATE POLICY "paros_insert_auth" ON paros_piscina FOR INSERT WITH CHECK ((select auth.uid()) IS NOT NULL);
 CREATE POLICY "comentarios_select_all" ON comentarios_bateria FOR SELECT USING (true);
-CREATE POLICY "comentarios_insert_auth" ON comentarios_bateria FOR INSERT WITH CHECK (auth.uid() IS NOT NULL AND usuario_id = auth.uid());
+CREATE POLICY "comentarios_insert_auth" ON comentarios_bateria FOR INSERT WITH CHECK ((select auth.uid()) IS NOT NULL AND usuario_id = (select auth.uid()));
 
 -- ============================================================================
 -- 4. FUNCIONES SQL
@@ -183,12 +183,15 @@ RETURNS boolean AS $$
 DECLARE
   overlapping_count integer;
 BEGIN
+  -- NOTA: parámetros calificados con el nombre de la función para evitar
+  -- shadowing con las columnas (piscina_id = piscina_id siempre era true).
+  -- Se mantienen los nombres de parámetros para no romper el RPC existente.
   SELECT COUNT(*)
   INTO overlapping_count
   FROM paros_piscina
-  WHERE piscina_id = piscina_id
-    AND fecha_inicio < fecha_fin
-    AND fecha_fin > fecha_inicio;
+  WHERE paros_piscina.piscina_id = verificar_paros_solapados.piscina_id
+    AND paros_piscina.fecha_inicio < verificar_paros_solapados.fecha_fin
+    AND paros_piscina.fecha_fin > verificar_paros_solapados.fecha_inicio;
 
   RETURN overlapping_count > 0;
 END;
@@ -351,8 +354,8 @@ ALTER TABLE cronograma_personal ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "empleados_select_all" ON empleados FOR SELECT USING (true);
 CREATE POLICY "cronograma_select_all" ON cronograma_personal FOR SELECT USING (true);
-CREATE POLICY "cronograma_insert_auth" ON cronograma_personal FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
-CREATE POLICY "cronograma_update_auth" ON cronograma_personal FOR UPDATE USING (auth.uid() IS NOT NULL);
+CREATE POLICY "cronograma_insert_auth" ON cronograma_personal FOR INSERT WITH CHECK ((select auth.uid()) IS NOT NULL);
+CREATE POLICY "cronograma_update_auth" ON cronograma_personal FOR UPDATE USING ((select auth.uid()) IS NOT NULL);
 
 -- ============================================================================
 -- 8. VISTA

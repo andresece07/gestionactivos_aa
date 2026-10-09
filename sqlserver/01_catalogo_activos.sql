@@ -187,6 +187,15 @@ GO
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_activos_estado')
   CREATE INDEX IX_activos_estado ON dbo.activos(estado);
 GO
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_activos_created_by')
+  CREATE INDEX IX_activos_created_by ON dbo.activos(created_by);
+GO
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_mov_usuario')
+  CREATE INDEX IX_mov_usuario ON dbo.movimientos_activos(usuario_id);
+GO
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_com_activo_usuario')
+  CREATE INDEX IX_com_activo_usuario ON dbo.comentarios_activo(usuario_id);
+GO
 
 -- ----------------------------------------------------------------------------
 -- 6. Movimientos de activos

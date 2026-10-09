@@ -191,6 +191,9 @@ CREATE INDEX idx_activos_piscina ON activos(piscina_id);
 CREATE INDEX idx_activos_proveedor ON activos(proveedor_id);
 CREATE INDEX idx_activos_estado ON activos(estado);
 CREATE INDEX idx_activos_codigo_unico ON activos(codigo_unico);
+CREATE INDEX idx_activos_created_by ON activos(created_by);
+CREATE INDEX idx_movimientos_usuario ON movimientos_activos(usuario_id);
+CREATE INDEX idx_comentarios_activo_usuario ON comentarios_activo(usuario_id);
 
 -- 6. MOVIMIENTOS DE ACTIVOS (generaliza movimientos_baterias)
 -- ============================================================================
@@ -509,25 +512,25 @@ CREATE POLICY "movimientos_select_all" ON movimientos_activos FOR SELECT USING (
 CREATE POLICY "comentarios_activo_select_all" ON comentarios_activo FOR SELECT USING (true);
 
 -- Políticas INSERT autenticado
-CREATE POLICY "categorias_insert_auth" ON categorias_producto FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
-CREATE POLICY "productos_insert_auth" ON productos FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
-CREATE POLICY "marcas_insert_auth" ON marcas FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
-CREATE POLICY "fincas_insert_auth" ON fincas FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
-CREATE POLICY "zonas_insert_auth" ON zonas FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
-CREATE POLICY "tolvas_insert_auth" ON tolvas FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
-CREATE POLICY "activos_insert_auth" ON activos FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
-CREATE POLICY "movimientos_insert_auth" ON movimientos_activos FOR INSERT WITH CHECK (auth.uid() IS NOT NULL AND usuario_id = auth.uid());
-CREATE POLICY "comentarios_activo_insert_auth" ON comentarios_activo FOR INSERT WITH CHECK (auth.uid() IS NOT NULL AND usuario_id = auth.uid());
+CREATE POLICY "categorias_insert_auth" ON categorias_producto FOR INSERT WITH CHECK ((select auth.uid()) IS NOT NULL);
+CREATE POLICY "productos_insert_auth" ON productos FOR INSERT WITH CHECK ((select auth.uid()) IS NOT NULL);
+CREATE POLICY "marcas_insert_auth" ON marcas FOR INSERT WITH CHECK ((select auth.uid()) IS NOT NULL);
+CREATE POLICY "fincas_insert_auth" ON fincas FOR INSERT WITH CHECK ((select auth.uid()) IS NOT NULL);
+CREATE POLICY "zonas_insert_auth" ON zonas FOR INSERT WITH CHECK ((select auth.uid()) IS NOT NULL);
+CREATE POLICY "tolvas_insert_auth" ON tolvas FOR INSERT WITH CHECK ((select auth.uid()) IS NOT NULL);
+CREATE POLICY "activos_insert_auth" ON activos FOR INSERT WITH CHECK ((select auth.uid()) IS NOT NULL);
+CREATE POLICY "movimientos_insert_auth" ON movimientos_activos FOR INSERT WITH CHECK ((select auth.uid()) IS NOT NULL AND usuario_id = (select auth.uid()));
+CREATE POLICY "comentarios_activo_insert_auth" ON comentarios_activo FOR INSERT WITH CHECK ((select auth.uid()) IS NOT NULL AND usuario_id = (select auth.uid()));
 
 -- Políticas UPDATE autenticado (solo campos permitidos)
-CREATE POLICY "categorias_update_auth" ON categorias_producto FOR UPDATE USING (auth.uid() IS NOT NULL);
-CREATE POLICY "productos_update_auth" ON productos FOR UPDATE USING (auth.uid() IS NOT NULL);
-CREATE POLICY "marcas_update_auth" ON marcas FOR UPDATE USING (auth.uid() IS NOT NULL);
-CREATE POLICY "fincas_update_auth" ON fincas FOR UPDATE USING (auth.uid() IS NOT NULL);
-CREATE POLICY "zonas_update_auth" ON zonas FOR UPDATE USING (auth.uid() IS NOT NULL);
-CREATE POLICY "tolvas_update_auth" ON tolvas FOR UPDATE USING (auth.uid() IS NOT NULL);
-CREATE POLICY "activos_update_auth" ON activos FOR UPDATE USING (auth.uid() IS NOT NULL);
-CREATE POLICY "movimientos_update_auth" ON movimientos_activos FOR UPDATE USING (auth.uid() IS NOT NULL);
+CREATE POLICY "categorias_update_auth" ON categorias_producto FOR UPDATE USING ((select auth.uid()) IS NOT NULL);
+CREATE POLICY "productos_update_auth" ON productos FOR UPDATE USING ((select auth.uid()) IS NOT NULL);
+CREATE POLICY "marcas_update_auth" ON marcas FOR UPDATE USING ((select auth.uid()) IS NOT NULL);
+CREATE POLICY "fincas_update_auth" ON fincas FOR UPDATE USING ((select auth.uid()) IS NOT NULL);
+CREATE POLICY "zonas_update_auth" ON zonas FOR UPDATE USING ((select auth.uid()) IS NOT NULL);
+CREATE POLICY "tolvas_update_auth" ON tolvas FOR UPDATE USING ((select auth.uid()) IS NOT NULL);
+CREATE POLICY "activos_update_auth" ON activos FOR UPDATE USING ((select auth.uid()) IS NOT NULL);
+CREATE POLICY "movimientos_update_auth" ON movimientos_activos FOR UPDATE USING ((select auth.uid()) IS NOT NULL);
 
 -- 11. SEED DATA INICIAL
 -- ============================================================================

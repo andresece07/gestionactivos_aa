@@ -16,14 +16,14 @@ CREATE POLICY "proveedores_select_all" ON proveedores FOR SELECT USING (true);
 
 CREATE POLICY "proveedores_insert_auth" ON proveedores
   FOR INSERT WITH CHECK (
-    auth.uid() IS NOT NULL 
-    AND created_by = auth.uid()
+    (select auth.uid()) IS NOT NULL 
+    AND created_by = (select auth.uid())
   );
 
 CREATE POLICY "proveedores_update_auth" ON proveedores
   FOR UPDATE USING (
-    auth.uid() IS NOT NULL 
-    AND (created_by = auth.uid() OR auth.uid() IN (SELECT id FROM auth.users WHERE raw_user_meta_data->>'role' = 'admin'))
+    (select auth.uid()) IS NOT NULL 
+    AND (created_by = (select auth.uid()) OR (select auth.uid()) IN (SELECT id FROM auth.users WHERE raw_user_meta_data->>'role' = 'admin'))
   );
 
 -- ============================================================================
@@ -89,8 +89,8 @@ CREATE INDEX IF NOT EXISTS idx_cronograma_estado ON cronograma_personal(estado);
 
 ALTER TABLE cronograma_personal ENABLE ROW LEVEL SECURITY;
 CREATE POLICY IF NOT EXISTS "cronograma_select_all" ON cronograma_personal FOR SELECT USING (true);
-CREATE POLICY IF NOT EXISTS "cronograma_insert_auth" ON cronograma_personal FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
-CREATE POLICY IF NOT EXISTS "cronograma_update_auth" ON cronograma_personal FOR UPDATE USING (auth.uid() IS NOT NULL);
+CREATE POLICY IF NOT EXISTS "cronograma_insert_auth" ON cronograma_personal FOR INSERT WITH CHECK ((select auth.uid()) IS NOT NULL);
+CREATE POLICY IF NOT EXISTS "cronograma_update_auth" ON cronograma_personal FOR UPDATE USING ((select auth.uid()) IS NOT NULL);
 
 -- ============================================================================
 -- PASO 5: Insertar empleados de prueba

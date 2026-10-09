@@ -13,15 +13,15 @@ DROP POLICY IF EXISTS "proveedores_update_auth" ON proveedores;
 -- INSERT: usuario autenticado y created_by = usuario actual
 CREATE POLICY "proveedores_insert_auth" ON proveedores
   FOR INSERT WITH CHECK (
-    auth.uid() IS NOT NULL 
-    AND created_by = auth.uid()
+    (select auth.uid()) IS NOT NULL 
+    AND created_by = (select auth.uid())
   );
 
 -- UPDATE: solo el creador o admin
 CREATE POLICY "proveedores_update_auth" ON proveedores
   FOR UPDATE USING (
-    auth.uid() IS NOT NULL 
-    AND (created_by = auth.uid() OR auth.uid() IN (SELECT id FROM auth.users WHERE raw_user_meta_data->>'role' = 'admin'))
+    (select auth.uid()) IS NOT NULL 
+    AND (created_by = (select auth.uid()) OR (select auth.uid()) IN (SELECT id FROM auth.users WHERE raw_user_meta_data->>'role' = 'admin'))
   );
 
 -- 3. Actualizar función create en supabaseClient.js para incluir created_by
