@@ -6,6 +6,7 @@ import { Loading } from '../components/Loading'
 import { ErrorAlert } from '../components/Error'
 import { ScheduleCell } from '../components/ScheduleCell'
 import { useScheduleGrid } from '../hooks/useScheduleGrid'
+import { getConsecutiveDays as getConsecutiveDaysUtil } from '../lib/scheduleUtils'
 
 const ESTADO_COLORS = {
   TURNO: '#0d6efd',
@@ -129,30 +130,8 @@ export default function CronogramaPage() {
     return dates
   }
 
-  const getConsecutiveDays = (employeeId, date, dates) => {
-    const dateStr = date.toISOString().split('T')[0]
-    const currentIndex = dates.findIndex(d => d.toISOString().split('T')[0] === dateStr)
-
-    if (currentIndex === -1) return 0
-
-    const currentRecord = scheduleData[`${employeeId}-${dateStr}`]
-    if (!currentRecord || currentRecord.estado !== 'TURNO') return 0
-
-    // Find the start of the consecutive sequence (look backward)
-    let startIndex = currentIndex
-    while (startIndex > 0) {
-      const prevDateStr = dates[startIndex - 1].toISOString().split('T')[0]
-      const prevRecord = scheduleData[`${employeeId}-${prevDateStr}`]
-      if (prevRecord && prevRecord.estado === 'TURNO') {
-        startIndex--
-      } else {
-        break
-      }
-    }
-
-    // Position within the sequence (1-based from left/start)
-    return currentIndex - startIndex + 1
-  }
+  const getConsecutiveDays = (employeeId, date, dates) =>
+    getConsecutiveDaysUtil(employeeId, date, dates, scheduleData)
 
   const getAvailablePersonnel = (date, dates) => {
     const dateStr = date.toISOString().split('T')[0]
